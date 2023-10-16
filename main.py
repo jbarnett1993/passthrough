@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
-df = pd.read_csv("master_data.csv")
+df = pd.read_csv("master_data.csv", infer_datetime_format=True)
 
 df = df[["CPSESSIONID","BANKINST","SESSIONTYPE","TRADEDATE","ORDERTYPE","IS_WINNER_FLAG",
          "DIRECTION","GIVENCCY", "QUOTEPAIR","GIVENAMT","SPOTRATE","SETTLEAMT","FWDPOINTS","ALLINRATE"]]
@@ -51,12 +51,18 @@ pivot_df.columns.name = None
 mask1 = np.logical_and(pivot_df["BID"]==0 , pivot_df["OFFER"]==0)
 pivot_df.loc[mask1,['BID','OFFER']]=np.nan
 
-pivot_df['SPREAD'] = (pivot_df['OFFER'] - pivot_df['BID']) * 10000
+
+# pivot_df['SPREAD'] = np.where(pivot_df['QUOTEPAIR'].str.contains('JPY'),((pivot_df['OFFER'] - pivot_df['BID']) * 100, pivot_df['OFFER'] - pivot_df['BID']) * 10000)
+# pivot_df['SPREAD'] = (pivot_df['OFFER'] - pivot_df['BID']) * 10000
 
 pivot_df = pivot_df.reset_index()
 
 
 pivot_df.reset_index(drop=True,inplace=True)
+
+
+
+pivot_df['SPREAD'] = np.where(pivot_df['QUOTEPAIR'].str.contains('JPY'),(pivot_df['OFFER'] - pivot_df['BID']) * 100, (pivot_df['OFFER'] - pivot_df['BID']) * 10000)
 
 mask = pivot_df["GIVENCCY"] != pivot_df["FIRSTCCY"]
 pivot_df["MIDPOINT"] = (pivot_df["BID"] + pivot_df["OFFER"]) /2 
@@ -65,10 +71,16 @@ pivot_df["MIDPOINT"] = (pivot_df["BID"] + pivot_df["OFFER"]) /2
 pivot_df.loc[mask, "GIVENAMT"] = pivot_df.loc[mask, "GIVENAMT"] / pivot_df.loc[mask, "MIDPOINT"]
 
 
+pivot_df['SPREAD'] = np.where(pivot_df.loc[mask, 'QUOTEPAIR'].str.contains('JPY'),(pivot_df.loc[mask, 'OFFER'] - pivot_df.loc[mask, 'BID']) * 100, (pivot_df.loc[mask, 'OFFER'] - pivot_df.loc[mask, 'BID']) * 10000)
+
+
+
 pivot_df.reset_index(drop=True, inplace=True)
 
 
-print(pivot_df)
+average_spread = pivot_df.groupby(['CPSESSIONID','TRADEDATE','QUOTEPAIR','SIZE_GROUP'])['SPREAD'].mean()
+print(average_spread)
+
 
 
 '''
@@ -85,6 +97,4 @@ print(pivot_df)
 2537  657376811.0  22/06/2023       ubsw   USD/JPY      USD      USD  2.500000e+07      20-30  142.74440  142.77270   283.0  142.758550
 2538  657903971.0  26/06/2023        anz   USD/CNH      CNH      USD  1.657211e+05       0-10    7.24127    7.24089    -3.8    7.241080
 2539  657903971.0  26/06/2023      rbcds   USD/CNH      CNH      USD  1.657229e+05       0-10    7.24116    7.24085    -3.1    7.241005
-
-
 '''
