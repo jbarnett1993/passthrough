@@ -73,7 +73,9 @@ pivot_df.loc[mask, "GIVENAMT"] = pivot_df.loc[mask, "GIVENAMT"] / pivot_df.loc[m
 
 pivot_df['SPREAD'] = np.where(pivot_df.loc[mask, 'QUOTEPAIR'].str.contains('JPY'),(pivot_df.loc[mask, 'OFFER'] - pivot_df.loc[mask, 'BID']) * 100, (pivot_df.loc[mask, 'OFFER'] - pivot_df.loc[mask, 'BID']) * 10000)
 
-
+mask_jpy = pivot_df.loc[mask, 'QUOTEPAIR'].str.contains('JPY')
+pivot_df.loc[mask & mask_jpy, 'SPREAD'] = -(pivot_df.loc[mask & mask_jpy, 'OFFER'] - pivot_df.loc[mask & mask_jpy, 'BID']) * 100
+pivot_df.loc[mask & ~mask_jpy, 'SPREAD'] = -(pivot_df.loc[mask & ~mask_jpy, 'OFFER'] - pivot_df.loc[mask & ~mask_jpy, 'BID']) * 10000
 
 pivot_df.reset_index(drop=True, inplace=True)
 
