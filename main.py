@@ -3,9 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import datetime
 from matplotlib.backends.backend_pdf import PdfPages
-
 df = pd.read_csv("master_data.csv", parse_dates=["TRADEDATE"], date_parser = lambda x: datetime.datetime.strptime(x,'%d/%m/%Y'),low_memory=False)
-
 
 
 df = df[["CPSESSIONID","BANKINST","SESSIONTYPE","TRADEDATE","ORDERTYPE","IS_WINNER_FLAG",
