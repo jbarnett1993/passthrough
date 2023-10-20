@@ -3,7 +3,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
-df = pd.read_csv("master_data.csv", infer_datetime_format=True)
+df = pd.read_csv("master_data.csv")
+df["TRADEDATE"] = pd.to_datetime(df["TRADEDATE"], format='%d-%m-%Y')
+
+
 
 df = df[["CPSESSIONID","BANKINST","SESSIONTYPE","TRADEDATE","ORDERTYPE","IS_WINNER_FLAG",
          "DIRECTION","GIVENCCY", "QUOTEPAIR","GIVENAMT","SPOTRATE","SETTLEAMT","FWDPOINTS","ALLINRATE"]]
@@ -52,14 +55,9 @@ mask1 = np.logical_and(pivot_df["BID"]==0 , pivot_df["OFFER"]==0)
 pivot_df.loc[mask1,['BID','OFFER']]=np.nan
 
 
-# pivot_df['SPREAD'] = np.where(pivot_df['QUOTEPAIR'].str.contains('JPY'),((pivot_df['OFFER'] - pivot_df['BID']) * 100, pivot_df['OFFER'] - pivot_df['BID']) * 10000)
-# pivot_df['SPREAD'] = (pivot_df['OFFER'] - pivot_df['BID']) * 10000
-
 pivot_df = pivot_df.reset_index()
 
-
 pivot_df.reset_index(drop=True,inplace=True)
-
 
 
 pivot_df['SPREAD'] = np.where(pivot_df['QUOTEPAIR'].str.contains('JPY'),(pivot_df['OFFER'] - pivot_df['BID']) * 100, (pivot_df['OFFER'] - pivot_df['BID']) * 10000)
@@ -71,7 +69,23 @@ pivot_df["MIDPOINT"] = (pivot_df["BID"] + pivot_df["OFFER"]) /2
 pivot_df.loc[mask, "GIVENAMT"] = pivot_df.loc[mask, "GIVENAMT"] / pivot_df.loc[mask, "MIDPOINT"]
 
 
-pivot_df['SPREAD'] = np.where(pivot_df.loc[mask, 'QUOTEPAIR'].str.contains('JPY'),(pivot_df.loc[mask, 'OFFER'] - pivot_df.loc[mask, 'BID']) * 100, (pivot_df.loc[mask, 'OFFER'] - pivot_df.loc[mask, 'BID']) * 10000)
+def assign_size_group(givenamt):
+    if givenamt < 10000000:
+        return "0-10"
+    elif givenamt < 20000000:
+        return "20-30"
+    elif givenamt < 30000000:
+        return "30-40"
+    elif givenamt < 40000000:
+        return "40-50"
+    elif givenamt < 50000000:
+        return "50-75"
+    elif givenamt < 75000000:
+        return "75-100"
+    else:
+        return "100+"
+
+pivot_df["SIZE_GROUP"] = pivot_df["GIVENAMT"].apply(assign_size_group)
 
 mask_jpy = pivot_df.loc[mask, 'QUOTEPAIR'].str.contains('JPY')
 pivot_df.loc[mask & mask_jpy, 'SPREAD'] = -(pivot_df.loc[mask & mask_jpy, 'OFFER'] - pivot_df.loc[mask & mask_jpy, 'BID']) * 100
@@ -80,22 +94,46 @@ pivot_df.loc[mask & ~mask_jpy, 'SPREAD'] = -(pivot_df.loc[mask & ~mask_jpy, 'OFF
 pivot_df.reset_index(drop=True, inplace=True)
 
 
+pivot_df['TRADEDATE'] = pd.to_datetime(pivot_df["TRADEDATE"])
 average_spread = pivot_df.groupby(['CPSESSIONID','TRADEDATE','QUOTEPAIR','SIZE_GROUP'])['SPREAD'].mean()
-print(average_spread)
+average_spread = average_spread.reset_index()
 
+average_spread.to_csv("cleaned_data.csv", index=False)
+import matplotlib.pyplot as plt 
+
+quote_pairs = average_spread["QUOTEPAIR"].unique()
+
+
+
+
+
+# for quote_pair in quote_pairs:
+#     plt.figure(figsize=(12,8))
+#     subset = average_spread[average_spread['QUOTEPAIR'] == quote_pair].sort_values(by='TRADEDATE')
+
+#     for size_group in subset['SIZE_GROUP'].unique():
+#         group_data = subset[subset['SIZE_GROUP'] == size_group]
+#         plt.plot(group_data['TRADEDATE'], group_data['SPREAD'] , label=size_group)
+
+#     plt.title(f"spreads over time for {quote_pair}")
+#     plt.xlabel("Trade Date")
+#     plt.ylabel("Spread")
+#     plt.legend()
+#     plt.show()
 
 
 '''
-CPSESSIONID  TRADEDATE   QUOTEPAIR  SIZE_GROUP
-574944291.0  07/01/2022  AUD/JPY    0-10          1.757778
-574981451.0  07/01/2022  USD/JPY    0-10          0.930000
-575406801.0  07/05/2022  USD/SGD    20-30         3.728000
-575430951.0  07/05/2022  EUR/USD    20-30         1.718000
-575475501.0  07/05/2022  USD/JPY    30-40         3.232500
-                                                    ...
-655899861.0  15/06/2023  USD/JPY    20-30         2.426667
-656244801.0  16/06/2023  USD/JPY    20-30         2.420909
-657250631.0  22/06/2023  USD/SGD    20-30         3.390909
-657376811.0  22/06/2023  USD/JPY    20-30         2.197273
-657903971.0  26/06/2023  USD/CNH    0-10          3.450000
+  df = pd.read_csv("master_data.csv")
+      CPSESSIONID   TRADEDATE   BANKINST QUOTEPAIR GIVENCCY FIRSTCCY      GIVENAMT SIZE_GROUP        BID      OFFER  SPREAD    MIDPOINT
+0     574944291.0  07/01/2022        anz   AUD/JPY      AUD      AUD  7.000000e+06       0-10   91.54500   91.57900   340.0   91.562000
+1     574944291.0  07/01/2022     barcap   AUD/JPY      AUD      AUD  7.000000e+06       0-10   91.55400   91.56700   130.0   91.560500
+2     574944291.0  07/01/2022       citi   AUD/JPY      AUD      AUD  7.000000e+06       0-10        NaN        NaN     NaN         NaN
+3     574944291.0  07/01/2022         gs   AUD/JPY      AUD      AUD  7.000000e+06       0-10   91.55300   91.57000   170.0   91.561500
+4     574944291.0  07/01/2022   hsbcbank   AUD/JPY      AUD      AUD  7.000000e+06       0-10   91.55000   91.56100   110.0   91.555500
+...           ...         ...        ...       ...      ...      ...           ...        ...        ...        ...     ...         ...
+2535  657376811.0  22/06/2023        ssb   USD/JPY      USD      USD  2.500000e+07      20-30  142.73900  142.76800   290.0  142.753500
+2536  657376811.0  22/06/2023  stanchart   USD/JPY      USD      USD  2.500000e+07      20-30  142.74200  142.76500   230.0  142.753500
+2537  657376811.0  22/06/2023       ubsw   USD/JPY      USD      USD  2.500000e+07      20-30  142.74440  142.77270   283.0  142.758550
+2538  657903971.0  26/06/2023        anz   USD/CNH      CNH      USD  1.657211e+05       0-10    7.24127    7.24089    -3.8    7.241080
+2539  657903971.0  26/06/2023      rbcds   USD/CNH      CNH      USD  1.657229e+05       0-10    7.24116    7.24085    -3.1    7.241005
 '''
