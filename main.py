@@ -47,7 +47,7 @@ pivot_df = df.pivot_table(index=['CPSESSIONID',"TRADEDATE",'BANKINST','QUOTEPAIR
 pivot_df.columns.name = None
 
 mask1 = np.logical_and(pivot_df["BID"]==0 , pivot_df["OFFER"]==0)
-pivot_df.loc[mask1,['BID','OFFER']]=np.nan
+pivot_df = pivot_df[~mask1]
 print(pivot_df)
 
 pivot_df = pivot_df.reset_index()
