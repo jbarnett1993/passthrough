@@ -98,6 +98,11 @@ pivot_df.reset_index(drop=True, inplace=True)
 pivot_df['TRADEDATE'] = pd.to_datetime(pivot_df["TRADEDATE"])
 pivot_df.to_csv("masterdata.csv")
 
+
+
+pivot_df = pivot_df.sort_values(["SPREAD"])
+print(pivot_df)
+
 average_spread_per_ccy_and_size = pivot_df.groupby(['CPSESSIONID','TRADEDATE','QUOTEPAIR','SIZE_GROUP'])['SPREAD'].mean()
 
 
@@ -108,6 +113,10 @@ average_spread_per_ccy_and_size = pivot_df.groupby(['CPSESSIONID','TRADEDATE','Q
 
 
 average_spread_per_bank_ccy_and_size = pivot_df.groupby(['QUOTEPAIR','SIZE_GROUP','BANKINST'])['SPREAD'].mean()
+
+
+
+
 print(average_spread_per_bank_ccy_and_size)
 
 
@@ -127,16 +136,17 @@ print(average_spread_per_bank_ccy_and_size)
 
 
 '''
-QUOTEPAIR  SIZE_GROUP  BANKINST
-AUD/CAD    0-10        anz          1.50
-                       barcap       0.50
-                       bnym        -0.40
-                       boaml        0.00
-                       cibc         0.90
-                                   ...
-USD/SGD    50-75       citi        17.20
-                       gs           6.60
-                       hsbcbank     8.70
-                       jpmc        11.01
-                       ubsw         3.30
+  df = pd.read_csv("master_data.csv")
+      CPSESSIONID   TRADEDATE   BANKINST QUOTEPAIR GIVENCCY FIRSTCCY      GIVENAMT SIZE_GROUP        BID      OFFER  SPREAD    MIDPOINT
+0     574944291.0  07/01/2022        anz   AUD/JPY      AUD      AUD  7.000000e+06       0-10   91.54500   91.57900   340.0   91.562000
+1     574944291.0  07/01/2022     barcap   AUD/JPY      AUD      AUD  7.000000e+06       0-10   91.55400   91.56700   130.0   91.560500
+2     574944291.0  07/01/2022       citi   AUD/JPY      AUD      AUD  7.000000e+06       0-10        NaN        NaN     NaN         NaN
+3     574944291.0  07/01/2022         gs   AUD/JPY      AUD      AUD  7.000000e+06       0-10   91.55300   91.57000   170.0   91.561500
+4     574944291.0  07/01/2022   hsbcbank   AUD/JPY      AUD      AUD  7.000000e+06       0-10   91.55000   91.56100   110.0   91.555500
+...           ...         ...        ...       ...      ...      ...           ...        ...        ...        ...     ...         ...
+2535  657376811.0  22/06/2023        ssb   USD/JPY      USD      USD  2.500000e+07      20-30  142.73900  142.76800   290.0  142.753500
+2536  657376811.0  22/06/2023  stanchart   USD/JPY      USD      USD  2.500000e+07      20-30  142.74200  142.76500   230.0  142.753500
+2537  657376811.0  22/06/2023       ubsw   USD/JPY      USD      USD  2.500000e+07      20-30  142.74440  142.77270   283.0  142.758550
+2538  657903971.0  26/06/2023        anz   USD/CNH      CNH      USD  1.657211e+05       0-10    7.24127    7.24089    -3.8    7.241080
+2539  657903971.0  26/06/2023      rbcds   USD/CNH      CNH      USD  1.657229e+05       0-10    7.24116    7.24085    -3.1    7.241005
 '''
