@@ -137,6 +137,18 @@ sorted_average_spread.to_csv("sorted_spreads.csv")
 
 
 '''
+QUOTEPAIR  SIZE_GROUP  SIZE_GROUP  BANKINST
+AUD/CAD    0-10        0-10        bnym        -0.40
+                                   boaml        0.00
+                                   jpmc         0.03
+                                   tdsec        0.10
+                                   ms           0.30
+                                               ...
+USD/SGD    50-75       50-75       barcap       7.70
+                                   anz          8.20
+                                   hsbcbank     8.70
+                                   jpmc        11.01
+                                   citi        17.20
   df = pd.read_csv("master_data.csv")
       CPSESSIONID   TRADEDATE   BANKINST QUOTEPAIR GIVENCCY FIRSTCCY      GIVENAMT SIZE_GROUP        BID      OFFER  SPREAD    MIDPOINT
 0     574944291.0  07/01/2022        anz   AUD/JPY      AUD      AUD  7.000000e+06       0-10   91.54500   91.57900   340.0   91.562000
