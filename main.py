@@ -100,8 +100,6 @@ pivot_df.to_csv("masterdata.csv")
 
 
 
-pivot_df = pivot_df.sort_values(["SPREAD"])
-print(pivot_df)
 
 average_spread_per_ccy_and_size = pivot_df.groupby(['CPSESSIONID','TRADEDATE','QUOTEPAIR','SIZE_GROUP'])['SPREAD'].mean()
 
@@ -115,11 +113,14 @@ average_spread_per_ccy_and_size = pivot_df.groupby(['CPSESSIONID','TRADEDATE','Q
 average_spread_per_bank_ccy_and_size = pivot_df.groupby(['QUOTEPAIR','SIZE_GROUP','BANKINST'])['SPREAD'].mean()
 
 
+sorted_average_spread = average_spread_per_bank_ccy_and_size.groupby(["QUOTEPAIR", "SIZE_GROUP"]).apply(lambda x: x.sort_values()).reset_index(level=2,drop=True)
 
 
-print(average_spread_per_bank_ccy_and_size)
+# sorted_average_spread = average_spread_per_bank_ccy_and_size.apply(lambda x: x.sort_values()).reset_index(level=2,drop=True)
 
 
+print(sorted_average_spread)
+sorted_average_spread.to_csv("sorted_spreads.csv")
 # for quote_pair in quote_pairs:
 #     plt.figure(figsize=(12,8))
 #     subset = average_spread[average_spread['QUOTEPAIR'] == quote_pair].sort_values(by='TRADEDATE')
