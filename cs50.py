@@ -2,11 +2,13 @@ import inflect
 import sys
 
 def get_names():
-    """Prompt the user for names until they input Ctrl-D."""
+    """Prompt the user for names until they input Ctrl-D or Ctrl-Z."""
     names = []
     while True:
         try:
-            name = input("Enter a name (Ctrl-D to stop): ")
+            name = input("Enter a name (Ctrl-D or Ctrl-Z to stop, or just press Enter): ")
+            if not name:  # exit loop if name is empty
+                break
             names.append(name)
         except EOFError:
             break
