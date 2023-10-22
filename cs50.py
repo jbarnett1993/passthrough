@@ -35,3 +35,14 @@ if __name__ == "__main__":
     user_input = input("Enter a string with emoji codes: ")
     emojized_output = emojize_string(user_input, emoji_dict)
     print("Emojized string:", emojized_output)
+    
+    
+    import emoji
+
+def emojize_string(s):
+    return emoji.emojize(s, use_aliases=True)
+
+if __name__ == "__main__":
+    user_input = input("Enter a string with emoji codes: ")
+    emojized_output = emojize_string(user_input)
+    print("Emojized string:", emojized_output)
