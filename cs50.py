@@ -1,29 +1,15 @@
-import sys
-import random
-import pyfiglet
+In The Sound of Music, there’s a song sung largely in English, So Long, Farewell, with these lyrics, wherein “adieu” means “goodbye” in French:
 
-test = pyfiglet.figlet_format("cs50", font = "slant" ) 
-# print(test)
+Adieu, adieu, to yieu and yieu and yieu
 
-def main():
-    if len(sys.argv) not in [1,3]:
-        sys.exit("incorrect usage")
-    
-    if len(sys.argv) == 3:
-        if sys.argv[1] not in ['-f','--font']:
-            sys.exit("first input not correct")
-        font = sys.argv[2]
-        if font not in pyfiglet.FigletFont.getFonts():
-            sys.exit(f"Font {font} is not supported")
+Of course, the line isn’t grammatically correct, since it would typically be written (with an Oxford comma) as:
 
-        else:
-            font = random.choice(pyfiglet.FigletFont.getFonts())
+Adieu, adieu, to yieu, yieu, and yieu
 
-        text = "cs50"
-        # text = input("Enter text:")
+To be fair, “yieu” isn’t even a word; it just rhymes with “you”!
 
-        result = pyfiglet.figlet_format(text, font=font)
-        print(result)
+In a file called adieu.py, implement a program that prompts the user for names, one per line, until the user inputs control-d. Assume that the user will input at least one name. Then bid adieu to those names, separating two names with one and, three names with two commas and one and, and 
+ names with 
+ commas and one and, as in the below:
 
-if __name__ == "__main__":
-    main()
+use the inflect module
