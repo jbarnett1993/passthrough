@@ -1,48 +1,19 @@
- '''implement a program that prompts the user for a str in English and then outputs the “emojized” version of that str, converting any codes (or aliases) therein to their corresponding emoji.
+FIGlet, named after Frank, Ian, and Glen’s letters, is a program from the early 1990s for making large letters out of ordinary text, a form of ASCII art:
 
- carpedm20.github.io/emoji/all.html?enableList=enable_list_alias '''
+ _ _ _          _   _     _
+| (_) | _____  | |_| |__ (_)___
+| | | |/ / _ \ | __| '_ \| / __|
+| | |   <  __/ | |_| | | | \__ \
+|_|_|_|\_\___|  \__|_| |_|_|___/
+Among the fonts supported by FIGlet are those at figlet.org/examples.html.
 
-implement a program that prompts the user for a str in English and then outputs the “emojized” version of that str, converting any codes (or aliases) therein to their corresponding emoji.
+FIGlet has since been ported to Python as a module called pyfiglet.
 
- carpedm20.github.io/emoji/all.html?enableList=enable_list_alias
+In a file called figlet.py, implement a program that:
 
-import requests
-from bs4 import BeautifulSoup
-
-def fetch_emoji_dict():
-    URL = "https://carpedm20.github.io/emoji/all.html?enableList=enable_list_alias"
-    response = requests.get(URL)
-    soup = BeautifulSoup(response.content, 'html.parser')
-    
-    emoji_dict = {}
-    
-    # Extracting emoji and its aliases from the website
-    for item in soup.find_all("li", class_="emoji"):
-        emoji = item.find("span", class_="icon").text.strip()
-        aliases = item.find("span", class_="aliases").text.strip().split(" ")
-        for alias in aliases:
-            emoji_dict[alias[1:-1]] = emoji  # Remove the colons from the alias
-    
-    return emoji_dict
-
-def emojize_string(s, emoji_dict):
-    for alias, emoji in emoji_dict.items():
-        s = s.replace(f":{alias}:", emoji)
-    return s
-
-if __name__ == "__main__":
-    emoji_dict = fetch_emoji_dict()
-    user_input = input("Enter a string with emoji codes: ")
-    emojized_output = emojize_string(user_input, emoji_dict)
-    print("Emojized string:", emojized_output)
-    
-    
-    import emoji
-
-def emojize_string(s):
-    return emoji.emojize(s, use_aliases=True)
-
-if __name__ == "__main__":
-    user_input = input("Enter a string with emoji codes: ")
-    emojized_output = emojize_string(user_input)
-    print("Emojized string:", emojized_output)
+Expects zero or two command-line arguments:
+Zero if the user would like to output text in a random font.
+Two if the user would like to output text in a specific font, in which case the first of the two should be -f or --font, and the second of the two should be the name of the font.
+Prompts the user for a str of text.
+Outputs that text in the desired font.
+If the user provides two command-line arguments and the first is not -f or --font or the second is not the name of a font, the program should exit via sys.exit with an error message.
