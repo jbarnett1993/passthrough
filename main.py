@@ -89,3 +89,31 @@ combined_rolldowns.to_csv('combined_rolldowns_test.csv')
 
 # Print the combined DataFrame
 print(combined_rolldowns)
+
+# Plotting each currency's yield curve on a separate page in a PDF
+with PdfPages('yield_curves.pdf') as pdf:
+    for currency in combined_rolldowns['Currency'].unique():
+        fig, ax = plt.subplots(figsize=(10, 6))
+        currency_data = combined_rolldowns[combined_rolldowns['Currency'] == currency]
+        
+        # Plot current yield
+        ax.plot(currency_data['Tenor'], currency_data['yield'], marker='o', label='Current Yield')
+
+        # Plot last week's yield if available
+        if 'last_week_yield' in currency_data.columns:
+            ax.plot(currency_data['Tenor'], currency_data['last_week_yield'], marker='x', linestyle='--', label='Last Week Yield')
+
+        # Plot last month's yield if available
+        if 'last_month_yield' in currency_data.columns:
+            ax.plot(currency_data['Tenor'], currency_data['last_month_yield'], marker='^', linestyle='--', label='Last Month Yield')
+
+        # Formatting the plot
+        ax.set_title(f'{currency} Yield Curve')
+        ax.set_xlabel('Tenor')
+        ax.set_ylabel('Yield')
+        ax.legend()
+        ax.grid(True)
+        
+        # Save the current figure to its page
+        pdf.savefig(fig)
+        plt.close(fig)
