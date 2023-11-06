@@ -11,7 +11,7 @@ mgr = dm.BbgDataManager()
 
 # Dictionary of curves
 curves = {
-    'AUD': '1', 'CAD': '7', 'CHF': '82',
+    'USD':'25','AUD': '1', 'CAD': '7', 'CHF': '82',
     'GER': '16', 'GBP': '22', 'JGB': '18',
     'nzd': '49', 'sek': '21', 'BTP': '40'
 }
@@ -117,3 +117,26 @@ with PdfPages('yield_curves.pdf') as pdf:
         # Save the current figure to its page
         pdf.savefig(fig)
         plt.close(fig)
+
+
+
+
+        '''
+        
+           Currency Tenor   Tenor Ticker  yield  Rolldown last_week_yield last_month_yield  ccy_test last_week_rolldown last_month_rolldown
+0        USD    1M  912797HN Govt  5.395       NaN           5.393            5.499     False                NaN                 NaN
+1        USD    2M  912797HX Govt  5.421     0.026           5.431            5.471      True              0.028              -0.078
+2        USD    3M  912797GE Govt  5.421     0.000           5.467            5.507      True              -0.01               -0.05
+3        USD    4M  912797JG Govt  5.467     0.046             NaN              NaN      True                0.0               -0.04
+4        USD    6M  912797HH Govt  5.480     0.013           5.558              NaN      True                NaN                 NaN
+..       ...   ...            ...    ...       ...             ...              ...       ...                ...                 ...
+151      BTP   15Y  BW763624 Corp  4.919     0.280           5.052            5.198      True               0.13              -0.036
+152      BTP   20Y  ZM337817 Corp  5.077     0.158           5.204            5.345      True              0.025              -0.121
+153      BTP   25Y  AX099966 Corp  5.029    -0.048           5.175            5.302      True             -0.175              -0.316
+154      BTP   30Y  ZL106368 Corp  5.134     0.105           5.276            5.395      True             -0.041              -0.168
+155      BTP   50Y  BO952242 Corp  4.703    -0.431           4.838            4.912      True             -0.573              -0.692 
+        
+        
+        
+        
+        '''
