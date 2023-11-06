@@ -56,11 +56,12 @@ rolldowns.to_csv("all_curves.csv")
 
 # Fetch historical data
 sids = mgr[rolldowns['Tenor Ticker'].to_list()]
-last_week = sids.get_historical('YLD_YTM_MID', start_date, end_date).T
+last_week = sids.get_historical('YLD_YTM_MID', start_date, start_date).T
+print(last_week)
 last_week.reset_index(inplace=True)
 last_week.columns = ['Tenor Ticker', 'last_week_yield']
 
-last_month = sids.get_historical('YLD_YTM_MID', start_last_month, end_last_month).T
+last_month = sids.get_historical('YLD_YTM_MID', start_last_month, start_last_month).T
 last_month.reset_index(inplace=True)
 last_month.columns = ['Tenor Ticker', 'last_month_yield']
 
@@ -84,7 +85,7 @@ combined_rolldowns['last_month_rolldown'] = np.where(
 )
 
 # Save the combined DataFrame to CSV
-combined_rolldowns.to_csv('combined_rolldowns.csv')
+combined_rolldowns.to_csv('combined_rolldowns_test.csv')
 
 # Print the combined DataFrame
 print(combined_rolldowns)
