@@ -139,7 +139,51 @@ with PdfPages('yield_curves.pdf') as pdf:
 154      BTP   30Y  ZL106368 Corp  5.134     0.105           5.276            5.395      True             -0.041              -0.168
 155      BTP   50Y  BO952242 Corp  4.703    -0.431           4.838            4.912      True             -0.573              -0.692 
         
+        # ... your existing code above
+
+# Plotting each currency's yield curve with rolldown annotations on a separate page in a PDF
+with PdfPages('yield_curves.pdf') as pdf:
+    for currency in combined_rolldowns['Currency'].unique():
+        fig, ax = plt.subplots(figsize=(10, 6))
+        currency_data = combined_rolldowns[combined_rolldowns['Currency'] == currency]
         
+        # Plot current yield and annotate rolldown
+        ax.plot(currency_data['Tenor'], currency_data['yield'], marker='o', label='Current Yield')
+        for i in range(len(currency_data)):
+            ax.annotate(f"{currency_data.iloc[i]['Rolldown']:.2f}",
+                        (currency_data.iloc[i]['Tenor'], currency_data.iloc[i]['yield']),
+                        textcoords="offset points", xytext=(0,10), ha='center')
+
+        # Plot last week's yield and annotate rolldown if available
+        if 'last_week_yield' in currency_data.columns:
+            ax.plot(currency_data['Tenor'], currency_data['last_week_yield'], marker='x', linestyle='--', label='Last Week Yield')
+            for i in range(len(currency_data)):
+                if pd.notnull(currency_data.iloc[i]['last_week_rolldown']):
+                    ax.annotate(f"{currency_data.iloc[i]['last_week_rolldown']:.2f}",
+                                (currency_data.iloc[i]['Tenor'], currency_data.iloc[i]['last_week_yield']),
+                                textcoords="offset points", xytext=(0,-15), ha='center')
+
+        # Plot last month's yield and annotate rolldown if available
+        if 'last_month_yield' in currency_data.columns:
+            ax.plot(currency_data['Tenor'], currency_data['last_month_yield'], marker='^', linestyle='--', label='Last Month Yield')
+            for i in range(len(currency_data)):
+                if pd.notnull(currency_data.iloc[i]['last_month_rolldown']):
+                    ax.annotate(f"{currency_data.iloc[i]['last_month_rolldown']:.2f}",
+                                (currency_data.iloc[i]['Tenor'], currency_data.iloc[i]['last_month_yield']),
+                                textcoords="offset points", xytext=(0,-15), ha='center')
+
+        # Formatting the plot
+        ax.set_title(f'{currency} Yield Curve')
+        ax.set_xlabel('Tenor')
+        ax.set_ylabel('Yield')
+        ax.legend()
+        ax.grid(True)
+        
+        # Save the current figure to its page
+        pdf.savefig(fig)
+        plt.close(fig)
+
+# ... any remaining code you have
         
         
         '''
