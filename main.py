@@ -4,7 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import numpy as np
-from datetime import datetime
+from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 
 mgr = dm.BbgDataManager()
@@ -12,16 +12,17 @@ mgr = dm.BbgDataManager()
 # Dictionary of curves
 curves = {
     'USD':'25','AUD': '1', 'CAD': '7', 'CHF': '82',
-    'GER': '16', 'GBP': '22', 'JGB': '18',
-    'nzd': '49', 'sek': '21', 'BTP': '40'
+    'DEM': '16', 'GBP': '22', 'JPY': '18',
+    'NZD': '49', 'SEK': '21', 'ITL': '40'
 }
 
 # Define start and end dates for the last week and last month
 start_date = (datetime.today() - relativedelta(days=7)).strftime('%Y-%m-%d')
 end_date = datetime.today().strftime('%Y-%m-%d')
-start_last_month = (datetime.today() - relativedelta(months=1)).strftime('%Y-%m-%d')
-end_last_month = start_last_month
-
+start_last_month = (datetime.today() - relativedelta(months=1))
+while start_last_month.weekday() >4:
+    start_last_month -= timedelta(days=1)
+start_last_month = start_last_month.strftime('%Y-%m-%d')
 # Initialize lists for rolldowns
 rolldowns = []
 last_week_values = []
@@ -55,19 +56,21 @@ rolldowns = pd.concat(rolldowns, ignore_index=True)
 rolldowns.to_csv("all_curves.csv")
 
 # Fetch historical data
-sids = mgr[rolldowns['Tenor Ticker'].to_list()]
+rolldowns['sids'] = 'GT' + rolldowns['Currency'] + rolldowns['Tenor'] + ' Govt'
+sids = mgr[rolldowns['sids'].to_list()]
 last_week = sids.get_historical('YLD_YTM_MID', start_date, start_date).T
-print(last_week)
 last_week.reset_index(inplace=True)
-last_week.columns = ['Tenor Ticker', 'last_week_yield']
+last_week.columns = ['sids', 'last_week_yield']
 
 last_month = sids.get_historical('YLD_YTM_MID', start_last_month, start_last_month).T
+print(last_month)
 last_month.reset_index(inplace=True)
-last_month.columns = ['Tenor Ticker', 'last_month_yield']
+print(last_month)
+last_month.columns = ['sids', 'last_month_yield']
 
 # Merge the historical data with the rolldown DataFrame
-combined_rolldowns = rolldowns.merge(last_week, on="Tenor Ticker")
-combined_rolldowns = combined_rolldowns.merge(last_month, on="Tenor Ticker")
+combined_rolldowns = rolldowns.merge(last_week, on="sids")
+combined_rolldowns = combined_rolldowns.merge(last_month, on="sids")
 
 # Add columns for last week and last month rolldown
 combined_rolldowns['ccy_test'] = combined_rolldowns['Currency'].eq(combined_rolldowns['Currency'].shift())
