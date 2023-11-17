@@ -97,11 +97,10 @@ w_rb = np.asmatrix(res.x)
 # print optimized weights
 df_weights = pd.DataFrame(np.reshape(w_rb, (1, -1)), index=['Weight'], columns=positions)
 
-print(w_rb)
-print(df_weights)
+print(df_weights.T)
 
 manual_weights = np.array([0.108586, 0.263875, 0.197608,0.280882,0.149048])
-optimised_risk_contributions = calculate_risk_contribution(manual_weights, V)
+optimised_risk_contributions = calculate_risk_contribution(w_rb, V)
 df_optimised_risk_contributions = pd.DataFrame(optimised_risk_contributions, index=positions, columns=['Risk Contribution'])
 print(df_optimised_risk_contributions)
 
@@ -121,4 +120,16 @@ scaling_factor = target_volatility/portfolio_volatility
 
 scaled_weights = df_weights * scaling_factor
 
+
+scaled_weighted_returns = pd.DataFrame(df_returns*scaled_weights.values)
+
+scaled_weighted_returns['port_returns'] = scaled_weighted_returns.sum(axis=1)
+
+scaled_portfolio_returns = scaled_weighted_returns['port_returns']
+
+scaled_df_port_std = np.std(scaled_portfolio_returns)
+
+scaled_portfolio_volatility = scaled_df_port_std * (252**0.5)
+
 print(scaled_weights)
+print(scaled_portfolio_volatility)
