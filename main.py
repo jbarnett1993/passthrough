@@ -3,15 +3,20 @@ import pandas as pd
 import tia.bbg.datamgr as dm
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
+from sklearn.preprocessing import normalize
 import numpy as np
-import riskparityportfolio as rp
+from matplotlib import pyplot as plt
+from numpy.linalg import inv,pinv
+from scipy.optimize import minimize
 
-# Read the excel file and get the positions and long/short indicators
+# read the excel file and get the positions and long/short indicators
 df = pd.read_excel('fund_positions.xlsx', sheet_name='Sheet1')
+# print(df)
 positions = df['Positions']
 long_short = df['long/short']
 
-# Get historical prices and returns
+print(df)
+# get historical prices and returns
 mgr = dm.BbgDataManager()
 sids = mgr[positions]
 mgr.sid_result_mode = 'frame'
@@ -21,29 +26,99 @@ df = sids.get_historical(['PX_OPEN'], start_date, end_date)
 df_returns = df.pct_change()
 for i in range(len(long_short)):
     if long_short[i] == 'short':
-        df_returns.iloc[:, i] = -1 * df_returns.iloc[:, i]
+        df_returns.iloc[:,i] = -1*df_returns.iloc[:,i]
 df_returns.reset_index()
 df_returns.columns = positions
 
-# Normalize data and calculate covariance matrix
+df_returns.to_csv("returns.csv")
+
 df_logreturns = np.log(1 + df_returns)
+
+
 df_logreturns.dropna(inplace=True)
-df_logreturns_norm = df_logreturns - np.mean(df_logreturns, axis=0)
+
+# normalize data
+df_logreturns_norm = normalize(df_logreturns)
+initial_norm_returns = pd.DataFrame(df_logreturns_norm)
+
+# calculate covariance matrix
 V = np.cov(df_logreturns_norm.T)
 
-# Define your budgeting vector (equal weights in this example)
-b = np.array([1/len(positions)] * len(positions))
+df_std = np.std(df_logreturns_norm)
 
-# Designing the risk parity portfolio
-w_rb = rp.vanilla.design(V, b)
+# define optimization constraints
+def total_weight_constraint(x):
+    return np.sum(x) - 1.0
 
-# Calculate risk contributions
-rc = w_rb @ (V * w_rb)
-rc /= np.sum(rc)
+# set bounds on weights
+lb = np.zeros_like(positions)
+ub = np.ones_like(positions)
 
-# Output the optimized weights and risk contributions
-df_weights = pd.DataFrame(w_rb, index=positions, columns=['Weight'])
-df_risk_contributions = pd.DataFrame(rc, index=positions, columns=['Risk Contribution'])
+cons = ({'type': 'eq', 'fun': total_weight_constraint})
 
+# risk budgeting optimization
+def calculate_portfolio_var(w, V):
+    # function that calculates portfolio risk
+    w = np.matrix(w)
+    return (w * V * w.T)[0, 0]
+
+def calculate_risk_contribution(w, V):
+    # function that calculates asset contribution to total risk
+    w = np.matrix(w)
+    sigma = np.sqrt(calculate_portfolio_var(w, V))
+    # Marginal Risk Contribution
+    MRC = V * w.T
+    # Risk Contribution
+    RC = np.multiply(MRC, w.T) / sigma
+    return RC
+
+def risk_budget_objective(x, pars):
+    # calculate portfolio risk
+    V = pars[0]
+    x_t = pars[1] 
+    sig_p = np.sqrt(calculate_portfolio_var(x, V)) 
+    risk_target = np.asmatrix(np.multiply(sig_p, x_t))
+    asset_RC = calculate_risk_contribution(x, V)
+    J = sum(np.square(asset_RC - risk_target.T))[0, 0]
+    return J
+
+# initial guess of weights
+w0 = np.ones(len(positions)) / len(positions)
+# w0 = np.array([0.204, -0.490, 0.348, 0.295, 0.340])
+
+print(w0)
+
+# run optimization to get risk budget weights
+res = minimize(risk_budget_objective, w0, args=[V, w0], method='SLSQP', bounds=list(zip(lb, ub)), constraints=cons, options={'disp': False})
+w_rb = np.asmatrix(res.x)
+
+
+
+# print optimized weights
+df_weights = pd.DataFrame(np.reshape(w_rb, (1, -1)), index=['Weight'], columns=positions)
+
+print(w_rb)
 print(df_weights)
-print(df_risk_contributions)
+
+manual_weights = np.array([0.108586, 0.263875, 0.197608,0.280882,0.149048])
+optimised_risk_contributions = calculate_risk_contribution(manual_weights, V)
+df_optimised_risk_contributions = pd.DataFrame(optimised_risk_contributions, index=positions, columns=['Risk Contribution'])
+print(df_optimised_risk_contributions)
+
+
+weighted_returns = pd.DataFrame(df_returns*df_weights.values)
+
+weighted_returns['port_returns'] = weighted_returns.sum(axis=1)
+
+portfolio_returns = weighted_returns['port_returns']
+
+df_port_std = np.std(portfolio_returns)
+
+portfolio_volatility = df_port_std * (252**0.5)
+
+target_volatility = 0.10
+scaling_factor = target_volatility/portfolio_volatility
+
+scaled_weights = df_weights * scaling_factor
+
+print(scaled_weights)
