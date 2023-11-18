@@ -68,4 +68,24 @@ for ticker in unique_tickers:
                      DATE CURRENCY  PX_LAST()
 
 
+
+import pandas as pd
+
+# Assuming 'bonds' is your list of DataFrames
+unique_dfs = []
+seen = set()
+
+for df in bonds:
+    # Convert DataFrame to a hashable form to check for uniqueness
+    df_str = df.to_string()
+    if df_str not in seen:
+        unique_dfs.append(df)
+        seen.add(df_str)
+
+# Now concatenate the unique DataFrames
+combined_df = pd.concat(unique_dfs, ignore_index=True)
+combined_df.set_index('ID', inplace=True)
+
+
+
 '''
