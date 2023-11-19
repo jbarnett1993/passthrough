@@ -1,19 +1,33 @@
 '''[                    
+
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
+import pandas as pd
+import textwrap
+
+# Assuming updated_dfs contains your updated DataFrames
+
 with PdfPages('output.pdf') as pdf:
     for df in updated_dfs[:10]:  # Process first 10 DataFrames
-        plt.figure(figsize=(8, 6))
-        plt.title(df['ISSUER'].iloc[0])  # Title from the 'ISSUER' column
+        # Convert DataFrame to a string
+        df_string = df.to_string(index=False)
 
-        # Plot table
-        plt.table(cellText=df.values, colLabels=df.columns, loc='center')
-        plt.axis('off')  # Hide axes
+        # Wrap text to fit into the PDF page
+        wrapped_text = textwrap.wrap(df_string, width=100)  # Adjust width as needed
 
-        # Save page
-        pdf.savefig()
-        plt.close()
+        for page in wrapped_text:
+            plt.figure(figsize=(8, 11))
+            plt.text(0.01, 0.95, page, fontsize=10, va='top', family='monospace')  # Adjust fontsize as needed
+            
+            # Title for the first page of each DataFrame
+            if page == wrapped_text[0]:
+                plt.title(df['ISSUER'].iloc[0], fontsize=14, pad=20)
+
+            plt.axis('off')
+            pdf.savefig()
+            plt.close()
 
 print("PDF generated.")
-
 
 
 
