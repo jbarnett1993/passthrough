@@ -1,4 +1,49 @@
-'''[                    DATE CURRENCY  PX_LAST()
+'''[                    
+import pandas as pd
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
+from matplotlib.colors import LinearSegmentedColormap
+import numpy as np
+
+# Assuming updated_dfs contains your updated DataFrames
+# Ensure you have at least 10 DataFrames in updated_dfs or adjust the range accordingly
+
+# Determine the global min and max values for 'YAS_ISPREAD_TO_GOVT'
+min_value = min(df['YAS_ISPREAD_TO_GOVT'].min() for df in updated_dfs[:10])
+max_value = max(df['YAS_ISPREAD_TO_GOVT'].max() for df in updated_dfs[:10])
+
+# Create a colormap
+cmap = LinearSegmentedColormap.from_list('rg', ["red", "green"], N=256)
+
+with PdfPages('output.pdf') as pdf:
+    for df in updated_dfs[:10]:
+        # Set the title to the first 'ISSUER' value of the DataFrame
+        plt.figure(figsize=(8, 6))
+        plt.title(df['ISSUER'].iloc[0])
+
+        # Create a color mapping based on 'YAS_ISPREAD_TO_GOVT'
+        norm = plt.Normalize(min_value, max_value)
+        colors = plt.cm.ScalarMappable(norm=norm, cmap=cmap).to_rgba(df['YAS_ISPREAD_TO_GOVT'])
+
+        # Create a table plot
+        table = plt.table(cellText=df.values, colLabels=df.columns, loc='center', 
+                          cellColours=np.array([colors]*df.shape[1]).transpose())
+        plt.axis('off')
+
+        # Add page to PDF
+        pdf.savefig()
+        plt.close()
+
+print("PDF generated.")
+
+
+
+
+
+
+
+
+DATE CURRENCY  PX_LAST()
  ID                                          
  BM966163 Corp 2023-11-19     None  100.63350
  ZR632585 Corp 2023-11-19     None  101.18700
