@@ -163,5 +163,5 @@
 
 
  resp = LocalTerminal.get_reference_data(ids,["NXT_CALL_DT","NXT_CALL_PX","PX_LAST",
-                                             "YAS_ISPREAD_TO_GOVT", ,ignore_field_error=1)
+                                             "YAS_ISPREAD_TO_GOVT","ISSUER" ],ignore_field_error=1)
 '''
