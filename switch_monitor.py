@@ -158,4 +158,11 @@
  ZO293345 Corp 2023-11-19     None     76.971
  BP573971 Corp 2023-11-19     None     75.735,
 
+
+ 
+
+
+ resp = LocalTerminal.get_reference_data(ids,["SECURITY_NAME","MARKET_SECTOR_DES","MIFID_SUB_ASSET_CLASS_NAME",
+                                             "BRAM_US_BASEL_III_STA_RS_WT_EX_T","CLASSIFICATION_LEVEL_4_NAME",
+                                            "BOND_TO_EQY_TICKER","ISSUER_PARENT_EQY_TICKER","CRNCY"],ignore_field_error=1)
 '''
