@@ -5,6 +5,7 @@ import tia.bbg.datamgr as dm
 import numpy as np
 from math import pi
 import matplotlib.pyplot as plt
+from scipy.stats import percentileofscore
 
 mgr = dm.BbgDataManager()
 
@@ -28,10 +29,21 @@ for sid in sids:
         
         # Join the two DataFrames on their index (date)
         df_combined = df_3m.join(df_1y, lsuffix='_3m', rsuffix='_1y')
-        
-        # Store the combined dataframe in the dictionary with key as SID
-        volatility_data[sid] = df_combined
+
+        # Calculate the percentile for the most recent 3m and 1y volatility values
+        last_3m_vol = df_combined.iloc[-1]['PX_LAST_3m']
+        last_1y_vol = df_combined.iloc[-1]['PX_LAST_1y']
+        percentile_3m = percentileofscore(df_combined['PX_LAST_3m'], last_3m_vol)
+        percentile_1y = percentileofscore(df_combined['PX_LAST_1y'], last_1y_vol)
+
+
+
     except Exception as e:
         print(f"An error occurred while fetching data for {sid}: {e}")
 
 
+
+# # Output the results
+
+# for sid, data in volatility_data.items():
+#     print(f"{sid} - 3M Volatility Percentile: {data['percentile_3m']}%, 1Y Volatility Percentile: {data['percentile_1y']}%")
