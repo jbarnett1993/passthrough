@@ -33,6 +33,5 @@ for sid in sids:
         volatility_data[sid] = df_combined
     except Exception as e:
         print(f"An error occurred while fetching data for {sid}: {e}")
-print(volatility_data)
 
 
