@@ -34,38 +34,30 @@ for sid in sids:
     except Exception as e:
         print(f"An error occurred while fetching data for {sid}: {e}")
 
-# Now volatility_data contains the combined dataframes for each SID with both 3-month and 1-year volatilities
-
-# Number of variables we're plotting.
-num_vars = len(volatility_data)
-
-# Create a figure for the radar chart.
 fig, ax = plt.subplots(figsize=(6, 6), subplot_kw=dict(polar=True))
 
-# Compute angle each bar is centered on:
+# There are 9 currency pairs, and we need to "close" the loop, so we use 10.
+num_vars = len(sids)
 angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
-
-# The plot is circular, so we need to "complete the loop" and append the start to the end.
-angles += angles[:1]
-
-# Draw one axe per variable and add labels
-ax.set_theta_offset(np.pi / 2)
-ax.set_theta_direction(-1)
+angles += angles[:1]  # Complete the loop
 
 # Draw the outline of our data.
-ax.set_thetagrids(np.degrees(angles[:-1]), volatility_data.keys())
+ax.set_theta_offset(np.pi / 2)
+ax.set_theta_direction(-1)
+ax.set_thetagrids(np.degrees(angles[:-1]), sids)
 
-# Prepare the percentile data for each currency pair
-for sid, df in volatility_data.items():
+# Plot each currency pair's volatility percentiles
+for sid in sids:
+    df = volatility_data[sid]
+
     # Calculate the percentile rank of the 3m and 1y volatilities.
     df['percentile_3m'] = df[df.columns[0]].rank(pct=True) * 100
     df['percentile_1y'] = df[df.columns[1]].rank(pct=True) * 100
-    
+
     # Fetch the last percentile ranks for the plot
-    values = df[['percentile_3m', 'percentile_1y']].iloc[-1].tolist()
-    # Complete the loop
-    values += values[:1]
-    
+    values = df.iloc[-1][['percentile_3m', 'percentile_1y']].tolist()
+    values += values[:1]  # Complete the loop
+
     # Plot data and fill with color
     ax.plot(angles, values, linewidth=1, linestyle='solid', label=sid)
     ax.fill(angles, values, alpha=0.25)
@@ -76,3 +68,15 @@ plt.title('FX Volatility Percentile Ranks')
 
 # Show the plot
 plt.show()
+
+
+''''Traceback (most recent call last):
+  File ".\main.py", line 62, in <module>
+    ax.plot(angles, values, linewidth=1, linestyle='solid', label=sid)
+  File "C:\Users\barnjam\Anaconda3\lib\site-packages\matplotlib\axes\_axes.py", line 1688, in plot
+    lines = [*self._get_lines(*args, data=data, **kwargs)]
+  File "C:\Users\barnjam\Anaconda3\lib\site-packages\matplotlib\axes\_base.py", line 311, in __call__  
+    yield from self._plot_args(
+  File "C:\Users\barnjam\Anaconda3\lib\site-packages\matplotlib\axes\_base.py", line 504, in _plot_args
+    raise ValueError(f"x and y must have same first dimension, but "
+ValueError: x and y must have same first dimension, but have shapes (10,) and (3,) '''
