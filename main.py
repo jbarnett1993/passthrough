@@ -11,7 +11,14 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 mgr = dm.BbgDataManager()
 
-start_date = (datetime.today() - relativedelta(years=5)).strftime('%Y-%m-%d')
+start_date = (datetime.today() - relativedelta(years=1)).strftime('%Y-%m-%d')
 end_date = datetime.today().strftime('%Y-%m-%d')
 
 sids = ["EURUSD", "USDNOK", "GBPUSD","USDCAD","USDJPY","USDSEK","AUDUSD", "USDCHF","NZDUSD"]
+vols = {} 
+for sid in sids:
+    q_ticker = sid + "V3M Curncy"
+    y_ticker = sid + "V1Y Curncy"
+
+    df = mgr[q_ticker].get_historical('PX_LAST', start_date, end_date)
+    vols[sid] = df
