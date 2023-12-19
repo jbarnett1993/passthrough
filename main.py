@@ -40,29 +40,9 @@ for sid in sids:
 
     except Exception as e:
         print(f"An error occurred while fetching data for {sid}: {e}")
-percentile_df = pd.DataFrame(percentiles)
-print(percentile_df)
+percentiles_df = pd.DataFrame(percentiles)
+print(percentiles_df)
 
-'''
-        percentile_3m  percentile_1y
-EURUSD       7.442748      17.175573
-USDNOK       8.396947      14.122137
-GBPUSD       1.526718       6.106870
-USDCAD       3.435115       1.908397
-USDJPY      42.175573      45.419847
-USDSEK      21.755725      27.862595
-AUDUSD       6.106870      11.259542
-USDCHF       5.725191      11.259542
-NZDUSD      12.595420      12.977099
-
-
-
-
-'''
-import matplotlib.pyplot as plt
-from math import pi
-
-# Assume 'percentiles_df' is your pre-existing DataFrame with the correct data
 
 # Number of variables we're plotting.
 categories = list(percentiles_df.index)
