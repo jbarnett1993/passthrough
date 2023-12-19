@@ -20,8 +20,7 @@ f_sids ={"EURUSD":"EUR12M Curncy", "USDNOK": "NOK12M Curncy", "GBPUSD": "GBP12M 
        "USDSEK": "SEK12M Curncy", "AUDUSD":"AUD12M Curncy", "USDCHF": "CHF12M Curncy", "NZDUSD":"NZD12M Curncy" } 
 
 
-fwd_prices = pd.DataFrame() 
+fwd_prices = pd.DataFrame()
 for ccy, fwd in f_sids.items():
-    fwd_prices[ccy] = mgr[fwd].PX_LAST
+    fwd = mgr[fwd].PX_LAST
 
-print(fwd_prices)
