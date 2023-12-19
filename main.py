@@ -58,10 +58,17 @@ fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True))
 # Draw one axis per variable and add labels
 plt.xticks(angles[:-1], categories)
 
-# Draw ylabels
+# sorting out the y labels
+
 ax.set_rlabel_position(0)
-plt.yticks([10, 20, 30, 40, 50], ["10", "20", "30", "40", "50"], color="grey", size=7)
-plt.ylim(0, 50)
+max_percentile = percentiles_df.max().max()
+max_ytick = (int(np.ceil(max_percentile / 10.0)) * 10) + 10
+yticks = list(range(0,max_ytick,10))
+ytick_labels = [str(ytick) for ytick in yticks]
+plt.yticks(yticks, ytick_labels,color="grey", size = 7)
+plt.ylim(0, max_ytick)
+
+
 
 # Plot each percentile
 for column in percentiles_df.columns:
@@ -73,4 +80,5 @@ for column in percentiles_df.columns:
 # Add a legend
 plt.legend(loc='upper right', bbox_to_anchor=(0.1, 0.1))
 
-plt.show()
+plt.savefig("myImagePDF.pdf", format="pdf", bbox_inches="tight")
+# plt.show()
