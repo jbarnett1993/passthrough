@@ -59,3 +59,38 @@ NZDUSD      12.595420      12.977099
 
 
 '''
+import matplotlib.pyplot as plt
+from math import pi
+
+# Assume 'percentiles_df' is your pre-existing DataFrame with the correct data
+
+# Number of variables we're plotting.
+categories = list(percentiles_df.index)
+N = len(categories)
+
+# What will be the angle of each axis in the plot? (divide the plot / number of variables)
+angles = [n / float(N) * 2 * pi for n in range(N)]
+angles += angles[:1]  # ensure the graph is circular by repeating the first value at the end
+
+# Initialise the radar plot
+fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True))
+
+# Draw one axis per variable and add labels
+plt.xticks(angles[:-1], categories)
+
+# Draw ylabels
+ax.set_rlabel_position(0)
+plt.yticks([10, 20, 30, 40, 50], ["10", "20", "30", "40", "50"], color="grey", size=7)
+plt.ylim(0, 50)
+
+# Plot each percentile
+for column in percentiles_df.columns:
+    values = percentiles_df[column].tolist()
+    values += values[:1]  # repeat the first value to close the circular graph
+    ax.plot(angles, values, linewidth=1, linestyle='solid', label=column)
+    ax.fill(angles, values, alpha=0.1)
+
+# Add a legend
+plt.legend(loc='upper right', bbox_to_anchor=(0.1, 0.1))
+
+plt.show()
