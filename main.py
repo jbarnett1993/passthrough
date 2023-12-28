@@ -9,10 +9,11 @@ from dateutil.relativedelta import relativedelta
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from tia.bbg import LocalTerminal
+from pandas.plotting import table
 
 mgr = dm.BbgDataManager()
 
-start_date = (datetime.today() - relativedelta(years=1)).strftime('%Y-%m-%d')
+start_date = (datetime.today() - relativedelta(months=6)).strftime('%Y-%m-%d')
 # end_date = datetime.today().strftime('%Y-%m-%d')
 end_date = datetime.strptime('2023-12-15','%Y-%m-%d')
 
@@ -76,5 +77,24 @@ ranked_momentum.columns = ["index", "score"]
 ranked_momentum.set_index("index", inplace=True)
 ranked_momentum = ranked_momentum.merge(names, how='left', left_index=True, right_index=True)
 
-
+# ranked_momentum.drop(ranked_momentum.index,inplace=True)
 print(ranked_momentum)
+ranked_momentum.set_index("SECURITY_NAME",inplace=True)
+print(ranked_momentum)
+pdf_filename = "short_term_momentum.pdf"
+with PdfPages(pdf_filename) as pdf:
+    fig, ax = plt.subplots(figsize=(12,4))
+    ax.axis('tight')
+    ax.axis('off')
+
+    mom_table = table(ax, ranked_momentum,loc='center')
+
+    pdf.savefig(fig,bbox_inches='tight')
+
+
+
+
+
+# coloumns*Gap between signal implied positioning and actual CTA positioning (1=most positive, 8=most negative)
+# 
+# **FX Momentum rank (avg. rank of deviation from 100-day MA & 30 day RSI) (1= high mom., 10 = low)
