@@ -1,77 +1,90 @@
-# import pandas as pd
-# from datetime import datetime
-# from dateutil.relativedelta import relativedelta
-# import tia.bbg.datamgr as dm
-# import numpy as np
-# from math import pi
-# import matplotlib.pyplot as plt
-# from scipy.stats import percentileofscore
-
-# mgr = dm.BbgDataManager()
-
-# # Define the date range for the past year
-# start_date = (datetime.today() - relativedelta(years=3)).strftime('%Y-%m-%d')
-# end_date = datetime.today().strftime('%Y-%m-%d')
-
-# # List of currency pairs
-# sids = ["EURUSD Curncy", "USDNOK Curncy", "GBPUSD Curncy", "USDCAD Curncy", "USDJPY Curncy", "USDSEK Curncy", "AUDUSD Curncy", "USDCHF Curncy", "NZDUSD Curncy"]
-
-# f_sids ={"EURUSD":"EUR12M Curncy", "USDNOK": "NOK12M Curncy", "GBPUSD": "GBP12M Curncy", "USDCAD": "CAD12M Curncy", "USDJPY": "JPY12M Curncy",
-#        "USDSEK": "SEK12M Curncy", "AUDUSD":"AUD12M Curncy", "USDCHF": "CHF12M Curncy", "NZDUSD":"NZD12M Curncy" } 
-
-
-# fwd_prices = pd.DataFrame()
-# for ccy, fwd in f_sids.items():
-#     spot = mgr[ccy +' Curncy'].PX_LAST
-#     fwd = mgr[fwd].PX_LAST
-#     fwd_prices.at['spot',ccy] = spot
-#     fwd_prices.at['fwd',ccy] = fwd
-#     fwd_prices.at['implied vol', ccy] = mgr[ccy + 'V3M Curncy'].PX_LAST
-
-# fwd_prices = fwd_prices.T
-
-# fwd_prices['fx_fwd_implied_carry'] = ((fwd_prices['fwd'] - fwd_prices['spot']) / fwd_prices["spot"]) * 100 *-1
-
-# fwd_prices.to_csv("df.csv")
-# print(fwd_prices)
-# # df = pd.read_csv("df.csv")
-# # print(df.index.values())
-
-
-'''
 import pandas as pd
+import numpy as np
+import tia.bbg.datamgr as dm
+import tia.analysis.ta as ta
+import tia.analysis.model as model
+from matplotlib import gridspec
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-import tia.bbg.datamgr as dm
-import numpy as np
-from math import pi
 import matplotlib.pyplot as plt
-from scipy.stats import percentileofscore
+from matplotlib.backends.backend_pdf import PdfPages
+from tia.bbg import LocalTerminal
 
 mgr = dm.BbgDataManager()
 
-# Define the date range for the past year
 start_date = (datetime.today() - relativedelta(years=1)).strftime('%Y-%m-%d')
 end_date = datetime.today().strftime('%Y-%m-%d')
 
+sids = ["TWI USSP Index",
+"TWI NKSP Index",
+"TWI JPSP Index",
+"TWI SFSP Index",
+"TWI EUSP Index",
+"TWI BPSP Index",
+"TWI ADSP Index",
+"TWI SKSP Index",
+"TWI CDSP Index",
+"TWI NDSP Index",]
 
-f_sids ={"EURUSD":"EUR12M Curncy", "USDNOK": "NOK12M Curncy", "GBPUSD": "GBP12M Curncy", "USDCAD": "CAD12M Curncy", "USDJPY": "JPY12M Curncy",
-       "USDSEK": "SEK12M Curncy", "AUDUSD":"AUD12M Curncy", "USDCHF": "CHF12M Curncy", "NZDUSD":"NZD12M Curncy" } 
+# create an empty dataframe to store the results
+results = pd.DataFrame([])
 
-df = pd.DataFrame()
-for ccy, fwd in f_sids.items():
-    spot = mgr[ccy + ' Curncy'].get_historical('PX_LAST', start_date, end_date)
-    fwd = mgr[fwd].get_historical('PX_LAST', start_date, end_date)
-    carry = ((fwd - spot) / spot) * 100 * -1
-    df[ccy] = carry
-    # df[ccy + '_spot'] = spot
-    # df[ccy + '_fwd'] = fwd
-df.plot()
-plt.ylabel("fwd_implied_carry (%)")
-plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-plt.show()
+# iterate over the list of securities
+for sid in sids:
+    df = mgr.get_historical(sid, ['PX_LAST'], start_date, end_date)
+    df[sid+'_100dma'] = df['PX_LAST'].rolling(window=100).mean()
+    df[sid+'_RSI']= ta.RSI(df['PX_LAST'],n=30)
 
+    #calculate divergence from 100 day MA 
+
+    df[sid+'_divergence'] = ((df['PX_LAST'] - df[sid+'_100dma'])/df['PX_LAST']) * 100
+
+    results = pd.concat([results, df], axis=1)
 
 
 
-'''
+# Calculate average rank of deviation and RSI 
+deviation_columns = results.filter(like='_divergence').columns 
+
+RSI_columns = results.filter(like='_RSI').columns
+ranked_deviations = results[deviation_columns].rank("columns", ascending=False)
+
+ranked_rsi = results[RSI_columns].rank("columns", ascending=False)
+
+
+deviation_mean = ranked_deviations.mean().to_frame().T
+rsi_mean = ranked_rsi.mean().to_frame().T
+
+momentum = pd.DataFrame([])
+
+for sid in sids:
+    col = rsi_mean.filter(like=sid).columns 
+    col2 = deviation_mean.filter(like=sid).columns
+    mom = rsi_mean[col].values + deviation_mean[col2].values
+    momentum[sid] = pd.DataFrame(mom)   
+    mmomentum = pd.concat([momentum, momentum[sid]])
+
+ranked_momentum = momentum.rank("columns", ascending=True)
+
+ranked_momentum = ranked_momentum.T
+ranked_momentum.reset_index(inplace=True)
+ids = ranked_momentum["index"].to_list()
+resp = LocalTerminal.get_reference_data(ids,["SECURITY_NAME"],ignore_field_error=1)
+names = resp.as_frame()
+ranked_momentum.columns = ["index", "score"]
+ranked_momentum.set_index("index", inplace=True)
+ranked_momentum = ranked_momentum.merge(names, how='left', left_index=True, right_index=True)
+
+
+print(ranked_momentum)
+
+
+
+
+
+
+
+
+# coloumns*Gap between signal implied positioning and actual CTA positioning (1=most positive, 8=most negative)
+# 
+# **FX Momentum rank (avg. rank of deviation from 100-day MA & 30 day RSI) (1= high mom., 10 = low)
