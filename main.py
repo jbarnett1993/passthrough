@@ -17,30 +17,26 @@ end_date = datetime.today().strftime('%Y-%m-%d')
 # end_date = datetime.strptime('2023-12-15','%Y-%m-%d')
 
 sid = ["EURUSD"]
-dates = ["1M","3M","6M","9M","1Y"]
+dates = ["1M","2M","3M","4M","5M","6M","7M","8M", "9M","1Y"]
 
 sids = []
 for date in dates:
     ticker = sid[0] + "V" + date + " Curncy" 
     sids.append(ticker)
 
-print(sids)
-'''
-          EURUSDV1M Curncy EURUSDV3M Curncy EURUSDV6M Curncy EURUSDV9M Curncy EURUSDV1Y Curncy
-                    PX_LAST          PX_LAST          PX_LAST          PX_LAST          PX_LAST
-date
-2022-12-28           8.6725           8.7150           8.4150           8.2800           8.2000
-2022-12-29           8.4725           8.7350           8.4200           8.3100           8.2100
-2022-12-30           8.5550           8.7600           8.3975           8.2600           8.1600
-2023-01-02           9.4700           8.8550           8.4375           8.2800           8.1600
-2023-01-03           9.8150           8.9425           8.5500           8.4150           8.2900
-...                     ...              ...              ...              ...              ...
-2023-12-22           6.3700           6.5050           6.5300           6.6300           6.7625
-2023-12-25           6.6400           6.6200           6.5900           6.5950           6.7750
-2023-12-26           6.6125           6.5875           6.5550           6.5650           6.7475
-2023-12-27           6.6225           6.6100           6.5450           6.5775           6.7250
-2023-12-28           6.7400           6.6750           6.5825           6.5900           6.7250
 
-
-
-'''
+df = mgr.get_historical(sids, ['PX_LAST'], start_date, end_date)
+percentiles = df.quantile([0.1, 0.25, 0.5,0.75,0.9])
+print(percentiles)
+current_vol = df.iloc[-1]
+plt.figure(figsize=(10,7))
+plt.plot(dates,current_vol,label="current vol",marker="o")
+plt.fill_between(dates,percentiles.iloc[0],percentiles.iloc[4],color="grey",alpha=0.1,label="10/90 percentile")
+plt.fill_between(dates,percentiles.iloc[1],percentiles.iloc[3],color="grey",alpha=0.3,label="25/75 percentile")
+plt.plot(dates,percentiles.iloc[2],label="50th percentile",linestyle="--",color="red")
+plt.title("EURUSD Vol Term Structure vs historical level (1y lookback)")
+plt.xlabel("Tenor")
+plt.ylabel("Volatility")
+plt.legend()
+plt.grid(True)
+plt.show()
