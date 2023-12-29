@@ -9,92 +9,44 @@ from dateutil.relativedelta import relativedelta
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from tia.bbg import LocalTerminal
-from pandas.plotting import table
 
 mgr = dm.BbgDataManager()
 
-start_date = (datetime.today() - relativedelta(months=6)).strftime('%Y-%m-%d')
-# end_date = datetime.today().strftime('%Y-%m-%d')
-end_date = datetime.strptime('2023-12-15','%Y-%m-%d')
+start_date = (datetime.today() - relativedelta(years=1)).strftime('%Y-%m-%d')
+end_date = datetime.today().strftime('%Y-%m-%d')
+# end_date = datetime.strptime('2023-12-15','%Y-%m-%d')
 
-sids = ["TWI USSP Index",
-"TWI NKSP Index",
-"TWI JPSP Index",
-"TWI SFSP Index",
-"TWI EUSP Index",
-"TWI BPSP Index",
-"TWI ADSP Index",
-"TWI SKSP Index",
-"TWI CDSP Index",
-"TWI NDSP Index",]
-
-# create an empty dataframe to store the results
-results = pd.DataFrame([])
-
-# iterate over the list of securities
-for sid in sids:
-    df = mgr.get_historical(sid, ['PX_LAST'], start_date, end_date)
-    df[sid+'_100dma'] = df['PX_LAST'].rolling(window=100).mean()
-    df[sid+'_RSI']= ta.RSI(df['PX_LAST'],n=30)
-
-    #calculate divergence from 100 day MA 
-
-    df[sid+'_divergence'] = ((df['PX_LAST'] - df[sid+'_100dma'])/df['PX_LAST']) * 100
-
-    results = pd.concat([results, df], axis=1)
-
-results = results.last('7D')
-
-# Calculate average rank of deviation and RSI 
-deviation_columns = results.filter(like='_divergence').columns 
-
-RSI_columns = results.filter(like='_RSI').columns
-ranked_deviations = results[deviation_columns].rank("columns", ascending=False)
-
-ranked_rsi = results[RSI_columns].rank("columns", ascending=False)
+sid = ["USDCAD"]
+dates = ["1M","2M","3M","4M","6M","9M","1Y"]
 
 
-deviation_mean = ranked_deviations.mean().to_frame().T
-rsi_mean = ranked_rsi.mean().to_frame().T
+sids = []
+for date in dates:
+    ticker = sid[0] + "V" + date + " Curncy" 
+    sids.append(ticker)
 
-momentum = pd.DataFrame([])
-
-for sid in sids:
-    col = rsi_mean.filter(like=sid).columns 
-    col2 = deviation_mean.filter(like=sid).columns
-    mom = rsi_mean[col].values + deviation_mean[col2].values
-    momentum[sid] = pd.DataFrame(mom)   
-    mmomentum = pd.concat([momentum, momentum[sid]])
-
-ranked_momentum = momentum.rank("columns", ascending=True)
-
-ranked_momentum = ranked_momentum.T
-ranked_momentum.reset_index(inplace=True)
-ids = ranked_momentum["index"].to_list()
-resp = LocalTerminal.get_reference_data(ids,["SECURITY_NAME"],ignore_field_error=1)
-names = resp.as_frame()
-ranked_momentum.columns = ["index", "score"]
-ranked_momentum.set_index("index", inplace=True)
-ranked_momentum = ranked_momentum.merge(names, how='left', left_index=True, right_index=True)
-
-# ranked_momentum.drop(ranked_momentum.index,inplace=True)
-print(ranked_momentum)
-ranked_momentum.set_index("SECURITY_NAME",inplace=True)
-print(ranked_momentum)
-pdf_filename = "short_term_momentum.pdf"
-with PdfPages(pdf_filename) as pdf:
-    fig, ax = plt.subplots(figsize=(12,4))
-    ax.axis('tight')
-    ax.axis('off')
-
-    mom_table = table(ax, ranked_momentum,loc='center')
-
-    pdf.savefig(fig,bbox_inches='tight')
+df = mgr.get_historical(sids, ['PX_LAST'], start_date, end_date)
+if df.isna().any().any():
+    print("filling NaN values")
+    df.fillna(method="ffill",inplace=True)
 
 
+percentiles = df.quantile([0.1, 0.25, 0.5,0.75,0.9])
 
 
-
-# coloumns*Gap between signal implied positioning and actual CTA positioning (1=most positive, 8=most negative)
-# 
-# **FX Momentum rank (avg. rank of deviation from 100-day MA & 30 day RSI) (1= high mom., 10 = low)
+if len(dates) != len(df.columns):
+    print(f"lenght mismatch between dates and columns, dates is {len(dates)} and columns is {len(df.columns)}")
+    
+current_vol = df.iloc[-1]
+plt.figure(figsize=(10,7))
+plt.plot(dates,current_vol,label="current vol",marker="o")
+plt.fill_between(dates,percentiles.iloc[0],percentiles.iloc[4],color="blue",alpha=0.1,label="10/90 percentile")
+plt.fill_between(dates,percentiles.iloc[1],percentiles.iloc[3],color="blue",alpha=0.15,label="25/75 percentile")
+plt.plot(dates,percentiles.iloc[2],label="50th percentile",linestyle="--",color="red")
+plt.title(f"{sid[0]} Vol Term Structure vs historical level (1y lookback)")
+plt.xlabel("Tenor")
+plt.ylabel("Volatility")
+plt.legend()
+plt.grid(True)
+plt.savefig("vol_term_structure.pdf", format="pdf", bbox_inches="tight")
+plt.show()
