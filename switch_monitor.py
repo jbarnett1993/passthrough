@@ -1,18 +1,28 @@
-import pandas as pd
-from openpyxl.utils import get_column_letter
+import requests
 
-writer = pd.ExcelWriter('eur_exposure.xlsx', engine='openpyxl')
-for df in final_dfs_merged:
-    name = df['NAME()'][0].split(" ")[0]
-    df.to_excel(writer, sheet_name=name, index=False)
+# Your credentials
+client_id = 'YOUR_CLIENT_ID'
+client_secret = 'YOUR_CLIENT_SECRET'
+scope = 'YOUR_SCOPE'  # Optional, space-delimited if multiple scopes
 
-    worksheet = writer.sheets[name]
+# OAuth 2.0 endpoint
+url = 'https://idfs.gs.com/as/token.oauth2'
 
-    for col in df.columns:
-        # Find the maximum length of the data in each column
-        max_length = max(df[col].astype(str).apply(len).max(), len(col))
-        # Adjust the column width; add a small buffer to ensure fit
-        column_letter = get_column_letter(df.columns.get_loc(col) + 1)
-        worksheet.column_dimensions[column_letter].width = max_length + 2
+# Payload with the required parameters
+payload = {
+    'grant_type': 'client_credentials',
+    'client_id': client_id,
+    'client_secret': client_secret,
+    'scope': scope
+}
 
-writer.save()
+# Make the POST request
+response = requests.post(url, data=payload)
+
+# Check if the request was successful
+if response.status_code == 200:
+    # Extract the token from the response
+    token = response.json().get('access_token')
+    print("Authentication token:", token)
+else:
+    print("Failed to retrieve token:", response.status_code, response.text)
