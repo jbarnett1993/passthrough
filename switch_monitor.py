@@ -1,9 +1,9 @@
 import requests
 
 # Your credentials
-client_id = 'YOUR_CLIENT_ID'
-client_secret = 'YOUR_CLIENT_SECRET'
-scope = 'YOUR_SCOPE'  # Optional, space-delimited if multiple scopes
+client_id = '5856b7c9c08140d69313b1b723108c25'
+client_secret = 'ff46deb0a3ca4ce3ecd4af97b083072e10be41eb48441921984130a0ad93a7c8'
+scope = 'read_financial_data read_product_data read_user_profile'  # Optional, space-delimited if multiple scopes
 
 # OAuth 2.0 endpoint
 url = 'https://idfs.gs.com/as/token.oauth2'
