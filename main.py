@@ -1,19 +1,28 @@
-'''
-           currency    gsdeer
-period
-1974-01-01   EURUSD  1.000000
-1974-04-01   EURUSD  1.030928
-1974-07-01   EURUSD  1.052632
-1974-10-01   EURUSD  1.041667
-1975-01-01   EURUSD  1.041667
-...             ...       ...
-2023-10-01   EURUSD  1.219512
-2024-01-01   EURUSD  1.234568
-2024-04-01   EURUSD  1.219512
-2024-07-01   EURUSD  1.219512
-2024-10-01   EURUSD  1.219512
+gs_data = {} 
+prices = {}
+for ccy, asset_id in dict.items():
+    # print(ccy,asset_id)
+    resp = ds.get_data(datetime.date.today(), assetId=asset_id, limit=500)
+    if ccy in ['AUDUSD','EURUSD','NZDUSD','GBPUSD']:
+        resp['gsdeer'] = 1/resp['gsdeer']
+    else:
+        continue
+    cols = ['year','quarter']    
+    resp['currency'] = ccy + ' Curncy'
+    resp['period'] =  resp[cols].astype(str).apply('-'.join, axis=1)
+    resp['period'] = pd.to_datetime(resp['period'])
+    resp = resp[['currency','period','gsdeer']]
+    resp.set_index('period', inplace=True)
+    resp = resp[resp.index.year >= 2000]
+    gs_data[ccy] = resp
+    
+
+    bbgresp = pd.DataFrame()
 
 
-get_historical('PX_LAST', start_date, end_date)
-
-'''
+    start_date = datetime.date(2000, 1, 1) 
+    end_date = datetime.date.today()
+    bbgresp['currency'] = ccy + ' Curncy'
+    bbgresp['price'] = mgr[ccy + ' Curncy'].get_historical('PX_LAST', start_date, end_date)
+    prices[ccy] = bbgresp
+print(prices['EURUSD'])
