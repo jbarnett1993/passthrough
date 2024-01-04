@@ -14,4 +14,6 @@ period
 2024-10-01   EURUSD  1.219512
 
 
+get_historical('PX_LAST', start_date, end_date)
+
 '''
