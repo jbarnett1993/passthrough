@@ -1,6 +1,17 @@
-data = []
-for ccy, asset_id in dict.items():
-    # print(ccy,asset_id)
-    resp = ds.get_data(datetime.date.today(), assetId=asset_id, limit=50)
-    data.append(resp)
+'''
+           currency    gsdeer
+period
+1974-01-01   EURUSD  1.000000
+1974-04-01   EURUSD  1.030928
+1974-07-01   EURUSD  1.052632
+1974-10-01   EURUSD  1.041667
+1975-01-01   EURUSD  1.041667
+...             ...       ...
+2023-10-01   EURUSD  1.219512
+2024-01-01   EURUSD  1.234568
+2024-04-01   EURUSD  1.219512
+2024-07-01   EURUSD  1.219512
+2024-10-01   EURUSD  1.219512
 
+
+'''
