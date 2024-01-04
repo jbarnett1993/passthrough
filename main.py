@@ -50,5 +50,34 @@ print(master_dict['EURUSD'])
 
 
 
+                 currency    gsdeer
+period
+2000-01-01  EURUSD Curncy  1.190476
+2000-04-01  EURUSD Curncy  1.176471
+2000-07-01  EURUSD Curncy  1.190476
+2000-10-01  EURUSD Curncy  1.176471
+2001-01-01  EURUSD Curncy  1.204819
+...                   ...       ...
+2023-10-01  EURUSD Curncy  1.219512
+2024-01-01  EURUSD Curncy  1.234568
+2024-04-01  EURUSD Curncy  1.219512
+2024-07-01  EURUSD Curncy  1.219512
+2024-10-01  EURUSD Curncy  1.219512
+
+[100 rows x 2 columns]
+                 currency   price
+date
+2000-01-03  EURUSD Curncy  1.0200
+2000-01-04  EURUSD Curncy  1.0306
+2000-01-05  EURUSD Curncy  1.0344
+2000-01-06  EURUSD Curncy  1.0286
+2000-01-07  EURUSD Curncy  1.0295
+...                   ...     ...
+2023-12-28  EURUSD Curncy  1.1074
+2023-12-29  EURUSD Curncy  1.1039
+2024-01-02  EURUSD Curncy  1.0951
+2024-01-03  EURUSD Curncy  1.0907
+2024-01-04  EURUSD Curncy  1.0942
+
 
 '''
