@@ -20,15 +20,13 @@ independent_variable = ".EUIG_BUN Index"
 mgr = dm.BbgDataManager()
 mgr.sid_result_mode = 'frame'
 
-# Get the historical data for the dependent and independent variables
+# Get the historical data for the independent variable
 independent_data = mgr[independent_variable].get_historical(['PX_LAST'], start_date, end_date)
-independent_data = independent_data / independent_data.shift(1)
 
 # Loop over the dependent variables
 for dependent_variable in dependent_variables:
     # Get the historical data for the current dependent variable
     dependent_data = mgr[dependent_variable].get_historical(['PX_LAST'], start_date, end_date)
-    dependent_data = dependent_data / dependent_data.shift(1)
 
     # Merge the data for the current dependent variable with the independent data
     combined_data = pd.merge(dependent_data, independent_data, left_index=True, right_index=True, suffixes=('_dependent', '_independent'))
@@ -39,10 +37,6 @@ for dependent_variable in dependent_variables:
     # Define the independent and dependent variables for the regression
     X = combined_data['PX_LAST_independent']
     y = combined_data['PX_LAST_dependent']
-
-    # Rename the columns of the data frame
-    X.name = independent_variable
-    y.name = dependent_variable
 
     # Add a constant term to the independent variables
     X = sm.add_constant(X)
@@ -56,8 +50,17 @@ for dependent_variable in dependent_variables:
     # Scatter plot
     plt.scatter(X[independent_variable], y, alpha=0.5)  # Plotting the data points
 
-    # Regression line
-    plt.plot(X[independent_variable], model.predict(X), color='red')  # Plotting the regression line
+    # Highlight the most recent data point
+    most_recent_x = X[independent_variable].iloc[-1]
+    most_recent_y = y.iloc[-1]
+    plt.scatter(most_recent_x, most_recent_y, color='red', s=100)  # Larger red dot
+
+    # Regression line with label
+    regression_label = f'y = {model.params[0]:.2f} + {model.params[1]:.2f}*X, R² = {model.rsquared:.2f}'
+    plt.plot(X[independent_variable], model.predict(X), color='red', label=regression_label)
+
+    # Add legend to the plot
+    plt.legend()
 
     # Adding labels and title
     plt.xlabel(independent_variable)
