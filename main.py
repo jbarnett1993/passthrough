@@ -1,29 +1,37 @@
 import QuantLib as ql
+import pandas as pd
+import tia.bbg.datamgr as dm
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
+from tia.bbg import LocalTerminal
 
+# # will use this later when i want to use bbg data more 
+# resp = LocalTerminal.get_reference_data('eurusd curncy', 'dflt_vol_surf_bid')
 
-Spot = 1.1
-Strike = 1.101
-Sigma = 10/100
-Ccy1Rate = 5/100
-Ccy2Rate = 10/100
+# resp = resp.as_frame()
+# print(resp.iloc[0]['dflt_vol_surf_bid'])
+
+mgr = dm.BbgDataManager()
+
+currency_pair = "EURUSD"
+Spot = mgr[currency_pair + " Curncy"].PX_LAST
+Strike = 1.0991
+Sigma = 0.06397
+Ccy1Rate = 0.03832
+Ccy2Rate = 0.05301
 OptionType = ql.Option.Call
 
-#Option dates in quantlib objects
-EvaluationDate = ql.Date(3, 1,2022)
-SettlementDate = ql.Date(5, 1, 2022) #Evaluation +2
-ExpiryDate = ql.Date(10, 1, 2022) #Evaluation + term which is 1 week
-DeliveryDate = ql.Date(12, 1, 2022) #Expiry +2
+# Option dates in quantlib objects
+EvaluationDate = ql.Date(13, 1,2024)
+SettlementDate = ql.Date(17, 4, 2024) #Evaluation +2
+ExpiryDate = ql.Date(15, 4, 2024) #Evaluation + term which is 1 week
+DeliveryDate = ql.Date(19, 1, 2024) #Expiry +2
 NumberOfDaysBetween = ExpiryDate - EvaluationDate
-#print(NumberOfDaysBetween)
 
 #Generate continuous interest rates
 EurRate = Ccy1Rate
 UsdRate = Ccy2Rate
 
-#Create QuoteHandle objects. Easily to adapt later on.
-#You can only access SimpleQuote objects. When you use setvalue, you can change it.
-#These global variables will then be used in pricing the option.
-#Everything will be adaptable except for the strike.
 SpotGlobal = ql.SimpleQuote(Spot)
 SpotHandle = ql.QuoteHandle(SpotGlobal)
 VolGlobal = ql.SimpleQuote(Sigma)
@@ -37,7 +45,7 @@ EurRateHandle = ql.QuoteHandle(EurRateGlobal)
 Calendar = ql.UnitedStates(ql.UnitedStates.Settlement)
 ql.Settings.instance().evaluationDate = EvaluationDate
 DayCountRate = ql.Actual360()
-DayCountVolatility = ql.ActualActual()
+DayCountVolatility = ql.ActualActual(ql.ActualActual.ISDA)
 
 #Create rate curves, vol surface and GK process
 RiskFreeRateEUR = ql.YieldTermStructureHandle(ql.FlatForward(0, Calendar, EurRateHandle, DayCountRate))
@@ -62,16 +70,3 @@ print("Theta is:", Option.theta()*1000000*(1/365)/Spot)
 print("Delta is:", Option.delta()*1000000)
 
 
-'''
-Traceback (most recent call last):
-  File "C:\Users\barnjam\OneDrive - Manulife\Coding\Python_Projects\passthrough\main.py", line 40, in <module>
-    DayCountVolatility = ql.ActualActual()
-  File "C:\Users\barnjam\Anaconda3\lib\site-packages\QuantLib\QuantLib.py", line 3816, in __init__
-    _QuantLib.ActualActual_swiginit(self, _QuantLib.new_ActualActual(*args))
-TypeError: Wrong number or type of arguments for overloaded function 'new_ActualActual'.
-  Possible C/C++ prototypes are:
-    QuantLib::ActualActual::ActualActual(QuantLib::ActualActual::Convention,Schedule const &)
-    QuantLib::ActualActual::ActualActual(QuantLib::ActualActual::Convention)
-
-
-'''
