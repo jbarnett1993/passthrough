@@ -60,3 +60,9 @@ print("Gamma is:", Option.gamma()*1000000*Spot/100)
 print("Vega is:", Option.vega()*1000000*(1/100)/Spot)
 print("Theta is:", Option.theta()*1000000*(1/365)/Spot)
 print("Delta is:", Option.delta()*1000000)
+
+
+'''
+TypeError: __init__() missing 1 required positional argument: 'm'
+
+'''
