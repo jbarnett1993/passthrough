@@ -34,7 +34,7 @@ EurRateGlobal = ql.SimpleQuote(EurRate)
 EurRateHandle = ql.QuoteHandle(EurRateGlobal)
 
 #Settings such as calendar, evaluationdate; daycount
-Calendar = ql.UnitedStates()
+Calendar = ql.UnitedStates(ql.UnitedStates.Settlement)
 ql.Settings.instance().evaluationDate = EvaluationDate
 DayCountRate = ql.Actual360()
 DayCountVolatility = ql.ActualActual()
@@ -63,6 +63,15 @@ print("Delta is:", Option.delta()*1000000)
 
 
 '''
-TypeError: __init__() missing 1 required positional argument: 'm'
+Traceback (most recent call last):
+  File "C:\Users\barnjam\OneDrive - Manulife\Coding\Python_Projects\passthrough\main.py", line 40, in <module>
+    DayCountVolatility = ql.ActualActual()
+  File "C:\Users\barnjam\Anaconda3\lib\site-packages\QuantLib\QuantLib.py", line 3816, in __init__
+    _QuantLib.ActualActual_swiginit(self, _QuantLib.new_ActualActual(*args))
+TypeError: Wrong number or type of arguments for overloaded function 'new_ActualActual'.
+  Possible C/C++ prototypes are:
+    QuantLib::ActualActual::ActualActual(QuantLib::ActualActual::Convention,Schedule const &)
+    QuantLib::ActualActual::ActualActual(QuantLib::ActualActual::Convention)
+
 
 '''
