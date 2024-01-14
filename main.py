@@ -20,3 +20,7 @@ print("D2 is:", d2)
 print("ND2 is:", nd2)
 
 # ... [rest of your code] ...
+'''
+=IF([@[FXOPT_CALLPUT]]="C",(([@Spot]*EXP(-[@[CCY1 Depo]]*[@[Time To Maturity (Years)]])*[@[Cumulative Normal d1]])-([@[FXOPT_STRIKE]]*EXP(-[@[CCY2 Depo]]*[@[Time To Maturity (Years)]])*[@[Cumulative Normal d2]])),[@[FXOPT_STRIKE]]*EXP(-[@[CCY2 Depo]]*[@[Time To Maturity (Years)]])*[@[Cumulative Normal -d2]]-[@Spot]*EXP(-[@[CCY1 Depo]]*[@[Time To Maturity (Years)]])*[@[Cumulative Normal -d1]])
+
+'''
