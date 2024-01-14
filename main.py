@@ -8,13 +8,15 @@ import numpy as np
 from scipy.stats import norm
 import matplotlib.pyplot as plt
 
+mgr = dm.BbgDataManager()
 
-class vanilla():
-    pass
 
 class straddle():
-    def __init__(self, spot, strike, expiry, vol, ccy1rate, ccy2rate, notional, direction=1):
+    def __init__(self, underlying, spot, strike, expiry, vol, ccy1rate, ccy2rate, notional, direction=1):
        self.direction = direction
+       self.notional = notional
+       self.underlying = underlying
+       self.spot = mgr[underlying + " Curncy"].PX_LAST
        call_payoff = ql.PlainVanillaPayoff(ql.Option.Call, strike)
        call_exercise = ql.EuropeanExercise(expiry)
        self.call = ql.VanillaOption(call_payoff,call_exercise)
@@ -24,7 +26,7 @@ class straddle():
        self.put = ql.VanillaOption(put_payoff,put_exercise)
 
        SpotHandle = ql.QuoteHandle(ql.SimpleQuote(spot))
-       VolHandle = ql.QuoteHandle(ql.SimpleQuote,vol)
+       VolHandle = ql.QuoteHandle(ql.SimpleQuote(vol))
        ccy1ratehandle = ql.QuoteHandle(ql.SimpleQuote(ccy1rate))
        ccy2ratehandle = ql.QuoteHandle(ql.SimpleQuote(ccy2rate))
        calendar = ql.UnitedStates(ql.UnitedStates.Settlement)
@@ -45,5 +47,7 @@ class straddle():
 
     def calculate_greeks(self):
 
-      premium = self.call.NPV()*self.notional/self.spot 
-      return premium
+      call_premium = self.call.NPV()*self.notional/self.spot 
+      put_premium = self.put.NPV()*self.notional/self.spot
+      total_premium = (call_premium + put_premium) * self.direction
+      return total_premium
