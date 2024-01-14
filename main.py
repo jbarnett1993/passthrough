@@ -9,93 +9,41 @@ from scipy.stats import norm
 import matplotlib.pyplot as plt
 
 
-mgr = dm.BbgDataManager()
+class vanilla():
+    pass
 
-# Quanltib Calendar Options
-Calendar = ql.UnitedStates(ql.UnitedStates.Settlement)
-EvaluationDate = ql.Date.todaysDate()
-SettlementDate = Calendar.advance(EvaluationDate, ql.Period('2D'))   #Evaluation +2
+class straddle():
+    def __init__(self, spot, strike, expiry, vol, ccy1rate, ccy2rate, notional, direction=1):
+       self.direction = direction
+       call_payoff = ql.PlainVanillaPayoff(ql.Option.Call, strike)
+       call_exercise = ql.EuropeanExercise(expiry)
+       self.call = ql.VanillaOption(call_payoff,call_exercise)
 
+       put_payoff = ql.PlainVanillaPayoff(ql.Option.Put, strike)
+       put_exercise = ql.EuropeanExercise(expiry)
+       self.put = ql.VanillaOption(put_payoff,put_exercise)
 
-currency_pair = "EURUSD"
-notional = 1000000
-ExpiryDate = ql.Date(15, 4, 2024)
-datetime_expiry = datetime(ExpiryDate.year(),ExpiryDate.month(),ExpiryDate.dayOfMonth()).strftime("%Y%m%d")
-Strike = 1.0991
-Sigma = LocalTerminal.get_reference_data(currency_pair+ " Curncy","RK311",RK315=datetime_expiry).as_frame().iloc[0][0] / 100
-Ccy1Rate = 0.03832
-Ccy2Rate = 0.05301
-OptionType = ql.Option.Call
-short_long = 1 # 1 for long, -1 for short
+       SpotHandle = ql.QuoteHandle(ql.SimpleQuote(spot))
+       VolHandle = ql.QuoteHandle(ql.SimpleQuote,vol)
+       ccy1ratehandle = ql.QuoteHandle(ql.SimpleQuote(ccy1rate))
+       ccy2ratehandle = ql.QuoteHandle(ql.SimpleQuote(ccy2rate))
+       calendar = ql.UnitedStates(ql.UnitedStates.Settlement)
+       
+       DayCountVolatility = ql.ActualActual(ql.ActualActual.ISDA)
 
-Spot = mgr[currency_pair + " Curncy"].PX_LAST
-
-DeliveryDate = Calendar.advance(ExpiryDate,ql.Period("2D"))
-NumberOfDaysBetween = ExpiryDate - EvaluationDate
-
-
-#Generate continuous interest rates
-EurRate = Ccy1Rate
-UsdRate = Ccy2Rate
-
-SpotGlobal = ql.SimpleQuote(Spot)
-SpotHandle = ql.QuoteHandle(SpotGlobal)
-VolGlobal = ql.SimpleQuote(Sigma)
-VolHandle = ql.QuoteHandle(VolGlobal)
-UsdRateGlobal = ql.SimpleQuote(UsdRate)
-UsdRateHandle = ql.QuoteHandle(UsdRateGlobal)
-EurRateGlobal = ql.SimpleQuote(EurRate)
-EurRateHandle = ql.QuoteHandle(EurRateGlobal)
-
-#Settings such as calendar, evaluationdate; daycount
-
-ql.Settings.instance().evaluationDate = EvaluationDate
-DayCountRate = ql.Actual360()
-DayCountVolatility = ql.ActualActual(ql.ActualActual.ISDA)
-
-#Create rate curves, vol surface and GK process
-RiskFreeRateEUR = ql.YieldTermStructureHandle(ql.FlatForward(0, Calendar, EurRateHandle, DayCountRate))
-RiskFreeRateUSD = ql.YieldTermStructureHandle(ql.FlatForward(0, Calendar, UsdRate, DayCountRate))
-Volatility = ql.BlackVolTermStructureHandle(ql.BlackConstantVol(0, Calendar, VolHandle, DayCountVolatility))
-GKProcess = ql.GarmanKohlagenProcess(SpotHandle, RiskFreeRateEUR, RiskFreeRateUSD, Volatility)
-
-#Generate option
-Payoff = ql.PlainVanillaPayoff(OptionType, Strike)
-Exercise = ql.EuropeanExercise(ExpiryDate)
-Option = ql.VanillaOption(Payoff, Exercise)
-Option.setPricingEngine(ql.AnalyticEuropeanEngine(GKProcess))
-BsPrice = Option.NPV()* short_long
+       DayCountRate = ql.Actual360
+       ccy1riskfreerate = ql.YieldTermStructureHandle(ql.FlatForward(0, calendar, ccy1ratehandle, DayCountRate))
+       ccy2riskfreerate = ql.YieldTermStructureHandle(ql.FlatForward(0, calendar, ccy2ratehandle, DayCountRate))
+       Volatility = ql.BlackVolTermStructure(ql.BlackConstantVol(0, calendar, VolHandle,DayCountVolatility)) 
+        
+       GKProcess = ql.GarmanKohlagenProcess(SpotHandle, ccy1riskfreerate, ccy2riskfreerate, Volatility)
 
 
-ql.Settings.instance().evaluationDate = EvaluationDate
-print("Premium is:", Option.NPV()*notional/Spot)
-print("Gamma is:", Option.gamma()*notional*Spot/100)
-print("Vega is:", Option.vega()*notional*(1/100)/Spot)
-print("Theta is :", Option.thetaPerDay()*notional/Spot)
-print("Delta is:", Option.delta()*notional)
+       self.call.setPricingEngine(ql.AnalyticEuropeanEngine(GKProcess))
+       self.put.setPricingEngine(ql.AnalyticEuropeanEngine(GKProcess))
+    
 
-strike_range = 0.15
-d_strike = Spot * (1-strike_range)
-u_strike = Spot * (1+strike_range)
-strikes = np.linspace(d_strike, u_strike, 50)
+    def calculate_greeks(self):
 
-# '''
-# plotting code
-
-# *****************************************************************************************
-# '''
-
-vega_values = []
-for strike in strikes:
-    payoff = ql.PlainVanillaPayoff(OptionType,strike)
-    Option = ql.VanillaOption(payoff,Exercise)
-    Option.setPricingEngine(ql.AnalyticEuropeanEngine(GKProcess))
-
-    vega = Option.vega()*100000*(1/100)/Spot * short_long
-    vega_values.append(vega)
-
-
-plt.plot(strikes,vega_values)
-plt.xlabel("strike")
-plt.ylabel("vega")
-plt.show()
+      premium = self.call.NPV()*self.notional/self.spot 
+      return premium
