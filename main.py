@@ -51,3 +51,9 @@ class straddle():
       put_premium = self.put.NPV()*self.notional/self.spot
       total_premium = (call_premium + put_premium) * self.direction
       return total_premium
+
+
+
+''''
+end of code
+'''
