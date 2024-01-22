@@ -28,6 +28,9 @@ f_sids ={"EURUSD":"EUR12M Curncy", "USDNOK": "NOK12M Curncy", "GBPUSD": "GBP12M 
        "USDSEK": "SEK12M Curncy", "AUDUSD":"AUD12M Curncy", "USDCHF": "CHF12M Curncy", "NZDUSD":"NZD12M Curncy",}
 
 positioning = mgr[p_sids.values()].PX_LAST
+print(positioning)
 print(type(positioning))
 for ccy, id in p_sids.items():
     positioning.rename(index={id,ccy},inplace=True)
+
+print(positioning)
