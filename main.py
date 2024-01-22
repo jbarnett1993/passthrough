@@ -34,3 +34,5 @@ for ccy, id in p_sids.items():
     positioning.rename(index={id,ccy},inplace=True)
 
 print(positioning)
+
+master_frame["score"] = [(master_frame["positioning_rank"] + master_frame["carry_rank"] + master_frame["momentum_rank"]) / 3].rank(ascending = False)
