@@ -1,63 +1,124 @@
-# FUNCTION TO MAKE A SCATTER PLOT WITH EQUAL AXIS LENGTHS
+from __future__ import division
+import pandas as pd
+import tia.bbg.datamgr as dm
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
+from sklearn.preprocessing import normalize
+import numpy as np
+from matplotlib import pyplot as plt
+from numpy.linalg import inv,pinv
+from scipy.optimize import minimize
 
-def plot_equal_lengths_scatters(data, x_name, y_name):
-    """
-    This function makes a scatter plot. It also draws dotted lines to make the x-axis and y-axis more easy to see.
-    
-    data: pandas DataFrame with dates on the index, and x- and y-axes names as columns. 
-    This is the data for the scatter plot.
-    x_name: String; the column name of the x-axis.
-    y_name: String; the column name of the y-axis.
-    
-    Return: The matplotlib.Figure and matplotlib.axes.Axes for the plot.
-    """
-    fig, ax = plt.subplots(nrows=1, ncols=1)
-    ax.grid(visible=True, linestyle='dashed', lw=0.35, color='lightgray')
-    ax.axhline(y=0, color='black', linestyle=(0, (10, 6)), lw=0.5)
-    ax.axvline(x=0, color='black', linestyle=(0, (10, 6)), lw=0.5)
-    ax.scatter(x=data[x_name], y=data[y_name], s=15, marker='o', c='gainsboro', edgecolors='darkgrey')
-    ax.set_xlabel(xlabel=x_name)
-    ax.set_ylabel(ylabel=y_name)
+# read the excel file and get the positions and long/short indicators
+df = pd.read_excel('fund_positions.xlsx', sheet_name='Sheet1')
+# print(df)
+positions = df['Positions']
+long_short = df['long/short']
 
-    xlim_left, xlim_right = ax.get_xlim()
-    ylim_bottom, ylim_top = ax.get_ylim()
-    
-    lim = np.max(np.abs(np.array([xlim_left, xlim_right, ylim_bottom, ylim_top])))
-    
-    ax.set_xlim(left=-lim, right=lim)
-    ax.set_ylim(bottom=-lim, top=lim)
-    
-    return fig, ax
+print(df)
+# get historical prices and returns
+mgr = dm.BbgDataManager()
+sids = mgr[positions]
+mgr.sid_result_mode = 'frame'
+start_date = (datetime.today() - relativedelta(years=1)).strftime('%Y-%m-%d')
+end_date = datetime.today().strftime('%Y-%m-%d')
+df = sids.get_historical(['PX_OPEN'], start_date, end_date)
+df_returns = df.pct_change()
+for i in range(len(long_short)):
+    if long_short[i] == 'short':
+        df_returns.iloc[:,i] = -1*df_returns.iloc[:,i]
+df_returns.reset_index()
+df_returns.columns = positions
+df_returns.dropna(inplace = True)
+
+df_logreturns = np.log(1 + df_returns)
 
 
-# FUNCTION TO MAKE A SCATTER PLOT
+df_logreturns.dropna(inplace=True)
 
-def plot_scatters(data, x_name, y_name, rounding=0.05):
-    """
-    This function makes a scatter plot. It also draws dotted lines to make the x-axis and y-axis more easy to see.
-    
-    data: pandas DataFrame with dates on the index, and x- and y-axes names as columns. 
-    This is the data for the scatter plot.
-    x_name: String; the column name of the x-axis.
-    y_name: String; the column name of the y-axis.
-    rounding: Float used to decide how to round off axes' limits.
-    
-    Return: The matplotlib.Figure and matplotlib.axes.Axes for the plot.
-    """
-    fig, ax = plt.subplots(nrows=1, ncols=1)
-    ax.grid(visible=True, linestyle='dashed', lw=0.35, color='lightgray')
-    ax.axhline(y=0, color='black', linestyle=(0, (10, 6)), lw=0.5)
-    ax.axvline(x=0, color='black', linestyle=(0, (10, 6)), lw=0.5)
-    ax.scatter(x=data[x_name], y=data[y_name], s=15, marker='o', c='gainsboro', edgecolors='darkgrey')
-    ax.set_xlabel(xlabel=x_name)
-    ax.set_ylabel(ylabel=y_name)
+# normalize data
+df_logreturns_norm = normalize(df_logreturns)
+initial_norm_returns = pd.DataFrame(df_logreturns_norm)
 
-    xlim_left = math.floor(data[x_name].min() / rounding) * rounding
-    xlim_right = math.ceil(data[x_name].max() / rounding) * rounding
-    ylim_bottom = math.floor(data[y_name].min() / rounding) * rounding
-    ylim_top = math.ceil(data[y_name].max() / rounding) * rounding
+# calculate covariance matrix
+V = np.cov(df_logreturns_norm.T)
+# V2 = np.cov(df_returns.T)
 
-    ax.set_xlim(left=xlim_left, right=xlim_right)
-    ax.set_ylim(bottom=ylim_bottom, top=ylim_top)
-    
-    return fig, ax
+
+df_std = np.std(df_logreturns_norm)
+
+# define optimization constraints
+def total_weight_constraint(x):
+    return np.sum(x) - 1.0
+
+# set bounds on weights
+lb = np.zeros_like(positions)
+ub = np.ones_like(positions)
+
+cons = ({'type': 'eq', 'fun': total_weight_constraint})
+
+# risk budgeting optimization
+def calculate_portfolio_var(w, V):
+    # function that calculates portfolio risk
+    w = np.matrix(w)
+    return (w * V * w.T)[0, 0]
+
+def calculate_risk_contribution(w, V):
+    # function that calculates asset contribution to total risk
+    w = np.matrix(w)
+    sigma = np.sqrt(calculate_portfolio_var(w, V))
+    # Marginal Risk Contribution
+    MRC = V * w.T
+    # Risk Contribution
+    RC = np.multiply(MRC, w.T) / sigma
+    return RC
+
+def risk_budget_objective(x, pars):
+    # calculate portfolio risk
+    V = pars[0]
+    x_t = pars[1] 
+    sig_p = np.sqrt(calculate_portfolio_var(x, V)) 
+    risk_target = np.asmatrix(np.multiply(sig_p, x_t))
+    asset_RC = calculate_risk_contribution(x, V)
+    J = sum(np.square(asset_RC - risk_target.T))[0, 0]
+    return J
+
+# initial guess of weights
+w0 = np.ones(len(positions)) / len(positions)
+# w0 = np.array([0.204, -0.490, 0.348, 0.295, 0.340])
+
+
+# run optimization to get risk budget weights
+res = minimize(risk_budget_objective, w0, args=[V, w0], method='SLSQP', bounds=list(zip(lb, ub)), constraints=cons, options={'disp': False})
+w_rb = np.asmatrix(res.x)
+
+
+
+# print optimized weights
+df_weights = pd.DataFrame(np.reshape(w_rb, (1, -1)), index=['Weight'], columns=positions)
+
+print(w_rb)
+print(df_weights)
+
+# manual_weights = np.array([0.204, 0.490, 0.348,0.295,0.340])
+optimised_risk_contributions = calculate_risk_contribution(w_rb, V)
+df_optimised_risk_contributions = pd.DataFrame(optimised_risk_contributions, index=positions, columns=['Risk Contribution'])
+print(df_optimised_risk_contributions)
+
+
+weighted_returns = pd.DataFrame(df_returns*df_weights.values)
+
+weighted_returns['port_returns'] = weighted_returns.sum(axis=1)
+
+portfolio_returns = weighted_returns['port_returns']
+
+df_port_std = np.std(portfolio_returns)
+
+portfolio_volatility = df_port_std * (252**0.5)
+
+target_volatility = 0.10
+scaling_factor = target_volatility/portfolio_volatility
+
+scaled_weights = df_weights * scaling_factor
+
+print(scaled_weights)
