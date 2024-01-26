@@ -86,3 +86,44 @@ print(total_port_return)
 sharpe_ratio = portfolio_annualized_sharpe(optimized_weights, df_returns)
 
 print(optimized_weights)
+
+import matplotlib.pyplot as plt
+
+# Existing code ...
+
+# Cumulative Returns Calculation
+cumulative_returns = (1 + daily_weighted_returns).cumprod()
+
+# Drawdown Calculation
+rolling_max = cumulative_returns.cummax()
+drawdowns = (cumulative_returns - rolling_max) / rolling_max
+
+# Plotting
+plt.figure(figsize=(15, 5))
+
+# Plot Cumulative Returns
+plt.subplot(1, 3, 1)
+plt.plot(cumulative_returns, label='Cumulative Returns')
+plt.title('Cumulative Returns Over Time')
+plt.xlabel('Date')
+plt.ylabel('Cumulative Returns')
+plt.legend()
+
+# Plot Daily Returns
+plt.subplot(1, 3, 2)
+plt.plot(daily_weighted_returns, label='Daily Returns', color='orange')
+plt.title('Daily Returns Over Time')
+plt.xlabel('Date')
+plt.ylabel('Daily Returns')
+plt.legend()
+
+# Plot Drawdown
+plt.subplot(1, 3, 3)
+plt.plot(drawdowns, label='Drawdown', color='red')
+plt.title('Drawdown Over Time')
+plt.xlabel('Date')
+plt.ylabel('Drawdown')
+plt.legend()
+
+plt.tight_layout()
+plt.show()
