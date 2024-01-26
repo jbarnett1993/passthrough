@@ -38,11 +38,10 @@ covariance_matrix = df_returns.cov()
 def portfolio_annualized_sharpe(weights, returns):
 
     portfolio_returns = np.dot(returns, weights)
-    portfolio_total_return = np.prod(1 + portfolio_returns) - 1
+    portfolio_total_return = np.prod(1 + portfolio_returns)
     nb_years = (returns.index[-1] - returns.index[0]).days / 365
     portfolio_std_dev = np.std(portfolio_returns)
     annual_r = (portfolio_total_return + 1) ** (1 / nb_years) - 1
-    input(annual_r)
     annual_std = portfolio_std_dev * np.sqrt(252)
     if annual_std == 0:
         return np.nan
@@ -71,10 +70,6 @@ optimized_weights = pd.Series(optimal_weights.x, index=df_returns.columns)
 portfolio_returns = np.dot(df_returns, optimized_weights)
 
 
-weighted_returns = df_returns.multiply(optimized_weights, axis=1)
-weighted_returns.to_csv("weighted returns.csv")
-daily_weighted_returns = weighted_returns.sum(axis=1)
-total_port_return = (1+daily_weighted_returns).prod()-1
-print(total_port_return)
 
 sharpe_ratio = portfolio_annualized_sharpe(optimized_weights, df_returns)
+
