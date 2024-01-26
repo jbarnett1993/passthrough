@@ -89,41 +89,50 @@ print(optimized_weights)
 
 import matplotlib.pyplot as plt
 
-# Existing code ...
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 
-# Cumulative Returns Calculation
-cumulative_returns = (1 + daily_weighted_returns).cumprod()
+# ... Your existing code ...
 
-# Drawdown Calculation
-rolling_max = cumulative_returns.cummax()
-drawdowns = (cumulative_returns - rolling_max) / rolling_max
+# Set the overall figure size
+plt.figure(figsize=(10, 12))
 
-# Plotting
-plt.figure(figsize=(15, 5))
+# Set common title
+plt.suptitle('max_sharpe Performance', fontsize=16)
 
 # Plot Cumulative Returns
-plt.subplot(1, 3, 1)
-plt.plot(cumulative_returns, label='Cumulative Returns')
-plt.title('Cumulative Returns Over Time')
-plt.xlabel('Date')
-plt.ylabel('Cumulative Returns')
-plt.legend()
+plt.subplot(3, 1, 1)  # 3 rows, 1 column, 1st subplot
+cumulative_plot = plt.plot(cumulative_returns, label='Cumulative Return', linewidth=2)
+plt.title('Cumulative Return', fontsize=14)
+plt.xlabel('Date', fontsize=12)
+plt.ylabel('Cumulative Return', fontsize=12)
+plt.legend(fontsize=10)
+plt.grid(True)
+
+# Adjust x-axis date formatting
+plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%b %d %Y'))
+plt.gca().xaxis.set_major_locator(mdates.MonthLocator())
 
 # Plot Daily Returns
-plt.subplot(1, 3, 2)
-plt.plot(daily_weighted_returns, label='Daily Returns', color='orange')
-plt.title('Daily Returns Over Time')
-plt.xlabel('Date')
-plt.ylabel('Daily Returns')
-plt.legend()
+plt.subplot(3, 1, 2)  # 3 rows, 1 column, 2nd subplot
+daily_plot = plt.bar(daily_weighted_returns.index, daily_weighted_returns, label='Daily Return', linewidth=2)
+plt.title('Daily Return', fontsize=14)
+plt.xlabel('Date', fontsize=12)
+plt.ylabel('Daily Return', fontsize=12)
+plt.legend(fontsize=10)
+plt.grid(True)
 
 # Plot Drawdown
-plt.subplot(1, 3, 3)
-plt.plot(drawdowns, label='Drawdown', color='red')
-plt.title('Drawdown Over Time')
-plt.xlabel('Date')
-plt.ylabel('Drawdown')
-plt.legend()
+plt.subplot(3, 1, 3)  # 3 rows, 1 column, 3rd subplot
+drawdown_plot = plt.plot(drawdowns, label='Drawdown', linewidth=2, color='red')
+plt.title('Drawdown', fontsize=14)
+plt.xlabel('Date', fontsize=12)
+plt.ylabel('Drawdown', fontsize=12)
+plt.legend(fontsize=10)
+plt.grid(True)
 
-plt.tight_layout()
+# Adjust layout to prevent overlap
+plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+
+# Show plot with adjustments
 plt.show()
