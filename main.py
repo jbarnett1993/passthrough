@@ -1,7 +1,21 @@
 from __future__ import division
+import numpy as np
 import pandas as pd
-import tia.bbg.datamgr as dm
+import getpass
+import requests
+import json
+import os
+import datetime as dt 
+import cvxpy as cp
+import xpress
 from datetime import datetime
+from matplotlib.dates import DateFormatter
+from matplotlib.ticker import PercentFormatter
+from matplotlib.gridspec import GridSpec
+from scipy.optimize import minimize
+from dateutil.relativedelta import relativedelta
+import matplotlib.pyplot as plt
+import tia.bbg.datamgr as dm
 from dateutil.relativedelta import relativedelta
 from sklearn.preprocessing import normalize
 import numpy as np
@@ -29,96 +43,82 @@ for i in range(len(long_short)):
         df_returns.iloc[:,i] = -1*df_returns.iloc[:,i]
 df_returns.reset_index()
 df_returns.columns = positions
-df_returns.dropna(inplace = True)
-
-df_logreturns = np.log(1 + df_returns)
 
 
-df_logreturns.dropna(inplace=True)
+start = (datetime.today() - relativedelta(years=1)).strftime('%Y-%m-%d')
+end   = datetime.today().strftime('%Y-%m-%d')
 
-# normalize data
-df_logreturns_norm = normalize(df_logreturns)
-initial_norm_returns = pd.DataFrame(df_logreturns_norm)
-
-# calculate covariance matrix
-V = np.cov(df_logreturns_norm.T)
-# V2 = np.cov(df_returns.T)
+covariance_matrix = df_returns.dropna(how='all').cov()
 
 
-df_std = np.std(df_logreturns_norm)
 
-# define optimization constraints
-def total_weight_constraint(x):
-    return np.sum(x) - 1.0
 
-# set bounds on weights
-lb = np.zeros_like(positions)
-ub = np.ones_like(positions)
 
-cons = ({'type': 'eq', 'fun': total_weight_constraint})
+def calculate_min_var_weight(asset_covariance):
+    n = asset_covariance.shape[0]
+    w = cp.Variable(n)
+    w_constraints = [cp.sum(w) == 1, w >= 0]
+    
+    risk = cp.quad_form(w, asset_covariance)
+    problem = cp.Problem(cp.Minimize(risk), w_constraints)
+    problem.solve()
+    return pd.Series(w.value, index=asset_covariance.columns)
 
-# risk budgeting optimization
-def calculate_portfolio_var(w, V):
+
+
+def calculate_portfolio_var(weights, covar_matrix):
     # function that calculates portfolio risk
-    w = np.matrix(w)
-    return (w * V * w.T)[0, 0]
+    weights = np.matrix(weights)
+    return np.dot(weights, np.dot(covar_matrix, weights.T))[0, 0]
 
-def calculate_risk_contribution(w, V):
+
+
+def calculate_risk_contribution(weights, covar_matrix, pct_contribution=False):
     # function that calculates asset contribution to total risk
-    w = np.matrix(w)
-    sigma = np.sqrt(calculate_portfolio_var(w, V))
+    weights = np.matrix(weights)
+    var = calculate_portfolio_var(weights, covar_matrix)
     # Marginal Risk Contribution
-    MRC = V * w.T
+    MRC = np.dot(covar_matrix, weights.T)
     # Risk Contribution
-    RC = np.multiply(MRC, w.T) / sigma
+    if pct_contribution:
+        RC = np.multiply(MRC, weights.T) / var
+    else:
+        RC = np.multiply(MRC, weights.T) / np.sqrt(var)
     return RC
 
-def risk_budget_objective(x, pars):
-    # calculate portfolio risk
-    V = pars[0]
-    x_t = pars[1] 
-    sig_p = np.sqrt(calculate_portfolio_var(x, V)) 
-    risk_target = np.asmatrix(np.multiply(sig_p, x_t))
-    asset_RC = calculate_risk_contribution(x, V)
-    J = sum(np.square(asset_RC - risk_target.T))[0, 0]
+
+
+def risk_budget_objective(x, covar_matrix, risk_budget):
+    risk_target = np.asmatrix(risk_budget)
+    asset_RC = calculate_risk_contribution(x, covar_matrix, pct_contribution=True)
+    J = sum(np.square(asset_RC - risk_target.T))[0, 0]  # sum of squared error
     return J
 
-# initial guess of weights
-w0 = np.ones(len(positions)) / len(positions)
-# w0 = np.array([0.204, -0.490, 0.348, 0.295, 0.340])
+def equal_risk_contribution_weights(covar_matrix, risk_budget_=None):
+    initial_weights = np.asarray([1 / covar_matrix.shape[1]] * covar_matrix.shape[1])
+    if risk_budget_ is None:
+        # equal risk budget for all
+        risk_budget_ = np.asarray([1 / covar_matrix.shape[1]] * covar_matrix.shape[1])
+
+    # CONSTRAINTS
+    # sum of weights = 1
+    constr = ({'type': 'eq', 'fun': lambda x: np.sum(x) - 1.0})
+    # Lower and upper bound of each strategy weight is equal to 0 and 1 respectively
+    lower_bound = np.asarray([0.] * covar_matrix.shape[1])
+    upper_bound = np.asarray([1.] * covar_matrix.shape[1])
+    bounds = list(zip(lower_bound, upper_bound))
+
+    res = minimize(risk_budget_objective, initial_weights, args=(covar_matrix, risk_budget_, ), constraints=constr,
+                   bounds=bounds, options={'ftol': 1e-15, 'maxiter': 100000},
+                   method='SLSQP')
+    
+    return pd.Series(res.x, index=covar_matrix.columns)
 
 
-# run optimization to get risk budget weights
-res = minimize(risk_budget_objective, w0, args=[V, w0], method='SLSQP', bounds=list(zip(lb, ub)), constraints=cons, options={'disp': False})
-w_rb = np.asmatrix(res.x)
+weights_input = equal_risk_contribution_weights(covariance_matrix)
+print(weights_input)
 
+pct_risk_contribution = pd.Series(np.asarray(calculate_risk_contribution(weights_input, covariance_matrix, 
+                                                                         pct_contribution=True).T)[0],
+                                  index=df.columns)
 
-
-# print optimized weights
-df_weights = pd.DataFrame(np.reshape(w_rb, (1, -1)), index=['Weight'], columns=positions)
-
-print(w_rb)
-print(df_weights)
-
-# manual_weights = np.array([0.204, 0.490, 0.348,0.295,0.340])
-optimised_risk_contributions = calculate_risk_contribution(w_rb, V)
-df_optimised_risk_contributions = pd.DataFrame(optimised_risk_contributions, index=positions, columns=['Risk Contribution'])
-print(df_optimised_risk_contributions)
-
-
-weighted_returns = pd.DataFrame(df_returns*df_weights.values)
-
-weighted_returns['port_returns'] = weighted_returns.sum(axis=1)
-
-portfolio_returns = weighted_returns['port_returns']
-
-df_port_std = np.std(portfolio_returns)
-
-portfolio_volatility = df_port_std * (252**0.5)
-
-target_volatility = 0.10
-scaling_factor = target_volatility/portfolio_volatility
-
-scaled_weights = df_weights * scaling_factor
-
-print(scaled_weights)
