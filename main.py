@@ -1,37 +1,75 @@
-# Other imports and data preparation code remains the same
+from __future__ import division
+import numpy as np
+import pandas as pd
+import datetime as dt 
+import cvxpy as cp
+from datetime import datetime
+from scipy.optimize import minimize
+from dateutil.relativedelta import relativedelta
+import tia.bbg.datamgr as dm
+from dateutil.relativedelta import relativedelta
+import numpy as np
+from numpy.linalg import inv,pinv
+from scipy.optimize import minimize
+
+# read the excel file and get the positions and long/short indicators
+df = pd.read_excel('fund_positions.xlsx', sheet_name='Sheet1')
+positions = df['Positions']
+
+# get historical prices and returns
+mgr = dm.BbgDataManager()
+sids = mgr[positions]
+mgr.sid_result_mode = 'frame'
+start_date = dt.datetime(2022, 12, 30)
+end_date   = dt.datetime(2023, 12, 29)
+
+df = sids.get_historical(['PX_LAST'], start_date, end_date)
+df.to_csv("sids with prices.csv")
+
+df_returns = df.pct_change()
+
+
+df_returns.dropna(inplace=True)
+df_returns.to_csv("returns.csv")
+
+
+covariance_matrix = df_returns.cov()
 
 def portfolio_annualized_sharpe(weights, returns):
-    # Function definition remains the same
+
+    portfolio_returns = np.dot(returns, weights)
+    portfolio_total_return = np.prod(1 + portfolio_returns) - 1
+    nb_years = (returns.index[-1] - returns.index[0]).days / 365
+    portfolio_std_dev = np.std(portfolio_returns)
+    annual_r = (portfolio_total_return + 1) ** (1 / nb_years) - 1
+    annual_std = portfolio_std_dev * np.sqrt(252)
+    if annual_std == 0:
+        return np.nan
+    return annual_r / annual_std
+
+
+# Optimization constraints and bounds
+constraints = [{'type': 'eq', 'fun': lambda x: np.sum(x) - 1}]  # Sum of weights must be 1
+# bounds = [(-0.20, 0.20) for _ in range(len(positions))]  # Long/short constraints
 
 # Objective function (to be minimized)
 def objective_function(weights):
-    return -portfolio_annualized_sharpe(weights, df_returns)  # Negative Sharpe Ratio
+    return -portfolio_annualized_sharpe(weights, df_returns)
 
-# Experiment with a different initial guess
-np.random.seed(0)  # Set seed for reproducibility
-initial_weights = np.random.random(len(positions))
-initial_weights /= np.sum(initial_weights)  # Ensure they sum to 1
 
+
+# Initial guess for weights
+initial_weights = np.array([1. / len(positions)] * len(positions))
+
+sharpe_ratio = portfolio_annualized_sharpe(initial_weights, df_returns)
 # Optimization
-optimal_weights = minimize(objective_function, initial_weights, method='SLSQP', bounds=bounds, constraints=constraints)
+optimal_weights = minimize(objective_function, initial_weights, method='SLSQP', constraints=constraints)
 
 # Display optimized weights
-optimized_weights = pd.Series(optimal_weights.x, index=positions)
-print(optimized_weights)
+optimized_weights = pd.Series(optimal_weights.x, index=df_returns.columns)
+portfolio_returns = np.dot(df_returns, optimized_weights)
+
+print(portfolio_returns)
 
 
-'''
-Positions   AUDUSD Curncy  USDCAD Curncy  USDCHF Curncy  EURUSD Curncy  GBPUSD Curncy  USDJPY Curncy  USDNOK Curncy  NZDUSD Curncy  USDSEK Curncy
-date
-2023-01-26            NaN            NaN            NaN            NaN            NaN            NaN            NaN            NaN            NaN    
-2023-01-27       0.006076       0.001694      -0.003878       0.002066      -0.003120      -0.000565       0.005632      -0.003022       0.000619    
-2023-01-30       0.002903       0.001268      -0.003219      -0.001519      -0.000828       0.000808      -0.004220      -0.001940       0.002318    
-2023-01-31       0.006341      -0.004786       0.003305       0.003586       0.000184      -0.001776       0.004854       0.008069      -0.000617    
-2023-02-01       0.006426      -0.002970      -0.002770      -0.006497       0.000645      -0.002993      -0.001687       0.004449      -0.004012    
-
-
-
-
-
-
-'''
+sharpe_ratio = portfolio_annualized_sharpe(optimized_weights, df_returns)
