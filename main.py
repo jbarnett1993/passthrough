@@ -1,25 +1,45 @@
-def annualized_sharpe_ratio(data, breakdown=False):
-    if not isinstance(data, pd.Series):
-        data = data[data.columns[0]]
-    values = np.asarray(data.values)
-    r = values[1:] / values[:-1] - 1
-    total_return = values[-1] / values[0]
-    nb_years = (data.index[-1] - data.index[0]).days / 365
-    std_r = np.std(r)
-    annual_r = total_return ** (1 / nb_years) - 1
-    annual_std = (std_r * np.sqrt(252))
-    if not breakdown:
-        if annual_std == 0:
-            return np.nan
-        return annual_r / annual_std
-    if annual_std == 0:
-        return np.nan, annual_r, annual_std
-    return annual_r / annual_std, annual_r, annual_std
-    
-    def portfolio_annualized_sharpe(weights, returns):
-    """
-    Calculate the annualized Sharpe ratio of a portfolio based on given weights and historical returns.
-    """
+from __future__ import division
+import numpy as np
+import pandas as pd
+import datetime as dt 
+import cvxpy as cp
+from datetime import datetime
+from scipy.optimize import minimize
+from dateutil.relativedelta import relativedelta
+import tia.bbg.datamgr as dm
+from dateutil.relativedelta import relativedelta
+import numpy as np
+from numpy.linalg import inv,pinv
+from scipy.optimize import minimize
+
+# read the excel file and get the positions and long/short indicators
+df = pd.read_excel('fund_positions.xlsx', sheet_name='Sheet1')
+# print(df)
+positions = df['Positions']
+long_short = df['long/short']
+
+print(df)
+# get historical prices and returns
+mgr = dm.BbgDataManager()
+sids = mgr[positions]
+mgr.sid_result_mode = 'frame'
+start_date = (datetime.today() - relativedelta(years=1)).strftime('%Y-%m-%d')
+end_date = datetime.today().strftime('%Y-%m-%d')
+df = sids.get_historical(['PX_OPEN'], start_date, end_date)
+df_returns = df.pct_change()
+for i in range(len(long_short)):
+    if long_short[i] == 'short':
+        df_returns.iloc[:,i] = -1*df_returns.iloc[:,i]
+df_returns.reset_index()
+df_returns.columns = positions
+
+
+start = (datetime.today() - relativedelta(years=1)).strftime('%Y-%m-%d')
+end   = datetime.today().strftime('%Y-%m-%d')
+covariance_matrix = df_returns.dropna(how='all').cov()
+
+def portfolio_annualized_sharpe(weights, returns):
+
     portfolio_returns = np.dot(returns, weights)
     portfolio_total_return = np.prod(1 + portfolio_returns) - 1
     nb_years = (returns.index[-1] - returns.index[0]).days / 365
@@ -31,14 +51,8 @@ def annualized_sharpe_ratio(data, breakdown=False):
         return np.nan
     return annual_r / annual_std
 
-# You can use this function in your optimization process:
-# Objective function (to be minimized)
-def objective_function(weights):
-    return -portfolio_annualized_sharpe(weights, df_returns)
 
-# Rest of the optimization code remains the same
 
-from scipy.optimize import minimize
 
 # Optimization constraints and bounds
 constraints = [{'type': 'eq', 'fun': lambda x: np.sum(x) - 1}]  # Sum of weights must be 1
@@ -46,7 +60,7 @@ bounds = [(-0.20, 0.20) for _ in range(len(positions))]  # Long/short constraint
 
 # Objective function (to be minimized)
 def objective_function(weights):
-    return -portfolio_annualized_sharpe(weights, df_returns)
+    return portfolio_annualized_sharpe(weights, df_returns)
 
 # Initial guess for weights
 initial_weights = np.array([1. / len(positions)] * len(positions))
