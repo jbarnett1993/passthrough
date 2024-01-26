@@ -23,6 +23,11 @@ mgr.sid_result_mode = 'frame'
 start_date = dt.datetime(2022, 12, 30)
 end_date   = dt.datetime(2023, 12, 29)
 
+
+# start_date = (datetime.today() - relativedelta(years=1)).strftime('%Y-%m-%d')
+# end_date = datetime.today().strftime('%Y-%m-%d')
+
+
 df = sids.get_historical(['PX_LAST'], start_date, end_date)
 df.to_csv("sids with prices.csv")
 
@@ -39,7 +44,6 @@ def portfolio_annualized_sharpe(weights, returns):
 
     portfolio_returns = np.dot(returns, weights)
     portfolio_total_return = np.prod(1 + portfolio_returns) - 1
-    input(portfolio_total_return)
     nb_years = (returns.index[-1] - returns.index[0]).days / 365
     portfolio_std_dev = np.std(portfolio_returns)
     annual_r = (portfolio_total_return + 1) ** (1 / nb_years) - 1
@@ -77,4 +81,8 @@ daily_weighted_returns = weighted_returns.sum(axis=1)
 total_port_return = (1+daily_weighted_returns).prod()-1
 print(total_port_return)
 
+
+
 sharpe_ratio = portfolio_annualized_sharpe(optimized_weights, df_returns)
+
+print(optimized_weights)
