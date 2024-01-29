@@ -61,3 +61,28 @@ with PdfPages('bollinger_bands.pdf') as export_pdf:
                 trade_counter += 1
                 position_open_price = None
             else:
+                
+                
+                
+for i, row in df.iterrows():
+    current_position = df.at[i, 'Position']
+    
+    # Open position at the first valid signal
+    if row['Order'] in ['Buy', 'Sell'] and current_position is None:
+        df.at[i, 'Position'] = row['Order']
+        position_open_price = row['Trade_Value']
+    elif current_position in ['Buy', 'Sell']:
+        # Close position if the price crosses the SMA again
+        if (current_position == 'Buy' and row['PX_LAST'] > row['SMA']) or \
+           (current_position == 'Sell' and row['PX_LAST'] < row['SMA']):
+            df.at[i, 'Position'] = 'Close'
+            pnl = row['Trade_Value'] - position_open_price if current_position == 'Buy' else position_open_price - row['Trade_Value']
+            df.at[i, 'PnL'] = pnl
+            trade_counter += 1
+            position_open_price = None
+        else:
+            # Continue holding the position if it hasn't returned to the mean
+            df.at[i, 'Position'] = current_position
+    # If no open position and no signal, continue holding
+    else:
+        df.at[i, 'Position'] = 'Hold'
