@@ -47,3 +47,17 @@ with PdfPages('bollinger_bands.pdf') as export_pdf:
         df['PnL'] = 0
         trade_counter = 0
         position_open_price = None
+        
+        # Iterate through rows to determine position changes and calculate PnL
+        for i, row in df.iterrows():
+            if row['Order'] in ['Buy', 'Sell'] and pd.isna(df.at[i, 'Position']):
+                # Open position at the first valid signal
+                df.at[i, 'Position'] = row['Order']
+                position_open_price = row['Trade_Value']
+            elif row['Order'] == 'Hold' and df.at[i, 'Position'] in ['Buy', 'Sell']:
+                # Close position when price returns to mean
+                df.at[i, 'Position'] = 'Close'
+                df.at[i, 'PnL'] = row['Trade_Value'] - position_open_price if df.at[i, 'Position'] == 'Buy' else position_open_price - row['Trade_Value']
+                trade_counter += 1
+                position_open_price = None
+            else:
