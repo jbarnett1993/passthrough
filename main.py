@@ -14,7 +14,7 @@ mgr = dm.BbgDataManager()
 start_date = (datetime.today() - relativedelta(years=5)).strftime('%Y-%m-%d')
 end_date = datetime.today().strftime('%Y-%m-%d')
 
-sids = ["USDSEK Curncy", "USDNOK Curncy", ...]  # truncated for brevity
+sids = ["USDSEK Curncy", "USDNOK Curncy",]  # truncated for brevity
 
 N = 20  # number of periods for moving average
 K = 2   # multiplier for standard deviation
@@ -25,8 +25,26 @@ with PdfPages('bollinger_bands.pdf') as export_pdf:
         # get the historical data for the current security
         df = mgr.get_historical(sid, ['PX_LAST'], start_date, end_date)
 
-        # ... (Bollinger Bands and signal generation code stays the same) ...
+        # Calculate moving average
+        df['SMA'] = df['PX_LAST'].rolling(window=N).mean()
+
+        # Calculate the standard deviation
+        df['STD'] = df['PX_LAST'].rolling(window=N).std()
+
+        # Calculate upper and lower bands
+        df['Upper_Band'] = df['SMA'] + (df['STD'] * K)
+        df['Lower_Band'] = df['SMA'] - (df['STD'] * K)
+
+        # Create an 'Order' column to hold the buy/sell signals
+        df['Order'] = np.where(df['PX_LAST'] < df['Lower_Band'], 'Buy', 
+                               np.where(df['PX_LAST'] > df['Upper_Band'], 'Sell', 'Hold'))
+
+        # Close position when price returns to mean
+        df['Position'] = df['Order'].replace(to_replace='Hold', method='ffill').shift()
+        df['Position'] = np.where((df['Order'] == 'Hold') & (df['Position'] != 'Hold'), 'Close', df['Position'])
         
+        # Track the trades and calculate profit/loss
+        df['Trade_Value'] = df['PX_LAST'] * unit_size
         # Initialize PnL and trade counter
         df['PnL'] = 0
         trade_counter = 0
