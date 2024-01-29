@@ -48,41 +48,68 @@ with PdfPages('bollinger_bands.pdf') as export_pdf:
         trade_counter = 0
         position_open_price = None
         
-        # Iterate through rows to determine position changes and calculate PnL
         for i, row in df.iterrows():
-            if row['Order'] in ['Buy', 'Sell'] and pd.isna(df.at[i, 'Position']):
-                # Open position at the first valid signal
+            current_position = df.at[i, 'Position']
+            
+            # Open position at the first valid signal
+            if row['Order'] in ['Buy', 'Sell'] and current_position is None:
                 df.at[i, 'Position'] = row['Order']
                 position_open_price = row['Trade_Value']
-            elif row['Order'] == 'Hold' and df.at[i, 'Position'] in ['Buy', 'Sell']:
-                # Close position when price returns to mean
-                df.at[i, 'Position'] = 'Close'
-                df.at[i, 'PnL'] = row['Trade_Value'] - position_open_price if df.at[i, 'Position'] == 'Buy' else position_open_price - row['Trade_Value']
-                trade_counter += 1
-                position_open_price = None
+            elif current_position in ['Buy', 'Sell']:
+                # Close position if the price crosses the SMA again
+                if (current_position == 'Buy' and row['PX_LAST'] > row['SMA']) or \
+                (current_position == 'Sell' and row['PX_LAST'] < row['SMA']):
+                    df.at[i, 'Position'] = 'Close'
+                    pnl = row['Trade_Value'] - position_open_price if current_position == 'Buy' else position_open_price - row['Trade_Value']
+                    df.at[i, 'PnL'] = pnl
+                    trade_counter += 1
+                    position_open_price = None
+                else:
+                    # Continue holding the position if it hasn't returned to the mean
+                    df.at[i, 'Position'] = current_position
+            # If no open position and no signal, continue holding
             else:
-                
-                
-                
-for i, row in df.iterrows():
-    current_position = df.at[i, 'Position']
-    
-    # Open position at the first valid signal
-    if row['Order'] in ['Buy', 'Sell'] and current_position is None:
-        df.at[i, 'Position'] = row['Order']
-        position_open_price = row['Trade_Value']
-    elif current_position in ['Buy', 'Sell']:
-        # Close position if the price crosses the SMA again
-        if (current_position == 'Buy' and row['PX_LAST'] > row['SMA']) or \
-           (current_position == 'Sell' and row['PX_LAST'] < row['SMA']):
-            df.at[i, 'Position'] = 'Close'
-            pnl = row['Trade_Value'] - position_open_price if current_position == 'Buy' else position_open_price - row['Trade_Value']
-            df.at[i, 'PnL'] = pnl
-            trade_counter += 1
-            position_open_price = None
-        else:
-            # Continue holding the position if it hasn't returned to the mean
-            df.at[i, 'Position'] = current_position
-    # If no open position and no signal, continue holding
-    else:
-        df.at[i, 'Position'] = 'Hold'
+                df.at[i, 'Position'] = 'Hold'
+
+        # Create a summary DataFrame
+        summary_df = pd.DataFrame({
+            'Number of Trades': [trade_counter],
+            'Number of Winners': [(df['PnL'] > 0).sum()],
+            'Number of Losers': [(df['PnL'] < 0).sum()],
+            'Average P&L': [df['PnL'].mean()] if trade_counter > 0 else [0],
+            'Best Trade': [df['PnL'].max()],
+            'Worst Trade': [df['PnL'].min()],
+            'Total P&L': [df['PnL'].sum()]
+        })
+
+        # Plotting the Bollinger Bands and signals
+        fig = plt.figure(figsize=(12,12))
+        gs = gridspec.GridSpec(2, 1, height_ratios=[1, 1]) 
+
+        ax0 = plt.subplot(gs[0])
+        ax0.plot(df['PX_LAST'], label='Price')
+        ax0.plot(df['SMA'], label='Middle Band (SMA)')
+        ax0.plot(df['Upper_Band'], label='Upper Band')
+        ax0.plot(df['Lower_Band'], label='Lower Band')
+        ax0.fill_between(df.index, df['Lower_Band'], df['Upper_Band'], color='grey', alpha=0.3)
+        ax0.scatter(df[df['Order'] == 'Buy'].index, df[df['Order'] == 'Buy']['PX_LAST'], label='Buy Signal', marker='^', color='green')
+        ax0.scatter(df[df['Position'] == 'Close'].index, df[df['Position'] == 'Close']['PX_LAST'], label='Sell/Close Signal', marker='v', color='red')
+        ax0.legend(loc='best')
+        ax0.set_title(f'{sid} Bollinger Bands')
+
+        # Add the table at the bottom
+        ax1 = plt.subplot(gs[1])
+        ax1.axis('tight')
+        ax1.axis('off')
+        table = ax1.table(cellText=summary_df.values,
+                          colLabels=summary_df.columns,
+                          loc='center')
+        table.auto_set_font_size(False)
+        table.set_fontsize(10)
+        table.scale(1.2, 1.2)
+
+        plt.tight_layout()
+
+        # Save the plot and table to the PDF
+        export_pdf.savefig()
+        plt.close()
