@@ -1,86 +1,20 @@
-import numpy as np
-import pandas as pd
-from utils import get_pnl_stats
-
-
-class Alpha2():
-
-    def __init__(self,insts,dfs,start,end):
-        self.insts = insts
-        self.dfs = dfs
-        self.start = start 
-        self.end = end
-
-    def init_portfolio_settings(self, trade_range):
-        portfolio_df=pd.DataFrame(index=trade_range)\
-            .reset_index()\
-            .rename(columns={"index":"datetime"})
-        portfolio_df.at[0,'capital'] = 10000
-        return portfolio_df
-    
-    def compute_meta_info(self, trade_range):
-        '''
-        mean_12(neg(minus(const_1,div(open,close))))
-        '''
-        for inst in self.insts:
-            df=pd.DataFrame(index=trade_range)
-            inst_df = self.dfs[inst]
-            alpha = -1 * (1-(inst_df.open/inst_df.close)).rolling(12).mean()
+'''
+Position	Name	Week 1 	Week 2	Week3	Week4	SUM
+1	PETER WELSBY	222	171	207	118	718
+2	NEAL CAPECCI	191	165	191	161	708
+3	JOE ROTHWELL	207	129	149	143	628
+4	DOMINIQUE LAPOINTE	187	140	150	141	618
+5	JAMES BARNETT	200	225	126	53	604
+6	PHILIP EHRMANN	157	140	148	148	593
+7	AMAN JOHAR	158	202	114	117	591
+8	DAVID DUGDALE	152	127	139	139	557
+9	WESLEY ADEYEMI	129	149	138	95	511
+10	ERICA CAMILLERI	127	131	147	93	498
+11	DAVID RULE	159	156	129	52	496
+12	GEORGE HAMBLING	119	86	101	87	393
+13	LAUREN MARIANO	129	98	122	26	375
+14	EDWARD RITCHIE	85	89	99	91	364
 
 
 
-            self.dfs[inst] = df.join(self.dfs[inst]).fillna(method="ffill").fillna(method="bfill")
-            self.dfs[inst]["ret"] = -1 + self.dfs[inst]["close"]/self.dfs[inst]["close"].shift(1)
-            self.dfs[inst]["alpha"] = alpha
-            self.dfs[inst]["alpha"] = self.dfs[inst]["alpha"].fillna(method="ffill")
-            sampled = self.dfs[inst]["close"] != self.dfs[inst]["close"].shift(1).fillna(method="bfill")
-            eligible = sampled.rolling(5).apply(lambda x: int(np.any(x))).fillna(0)
-            self.dfs[inst]["eligible"] = eligible.astype(int) & (self.dfs[inst]["close"] > 0).astype(int) & (~pd.isna(self.dfs[inst]["alpha"]))
-        return 
-        
-    def run_simulation(self):
-        print("Running backtest")
-        date_range = pd.date_range(start=self.start,end=self.end,freq="D")
-        self.compute_meta_info(trade_range=date_range)
-        portfolio_df = self.init_portfolio_settings(trade_range=date_range)
-        for i in portfolio_df.index:
-            date = portfolio_df.at[i,"datetime"]
-
-            eligibles = [inst for inst in self.insts if self.dfs[inst].at[date,"eligible"]]
-            non_eligibles = [inst for inst in self.insts if inst not in eligibles]
-            #for any date that isnt day one we calculate pnls
-            if i != 0:
-                date_prev = portfolio_df.at[i-1,"datetime"]
-                day_pnl, capital_ret =   get_pnl_stats(date=date,prev=date_prev,portfolio_df=portfolio_df,insts=self.insts,idx=i,dfs=self.dfs)
-
-            #randomly generated alpha scores for now
-            alpha_scores = {}
-            import random
-            for inst in eligibles:
-                alpha_scores[inst] = self.dfs[inst].at[date,"alpha"]
-            
-            #if not in the eligibles group then we set weights and units to 0
-            for inst in non_eligibles:
-                portfolio_df.at[i,"{} w".format(inst)] = 0
-                portfolio_df.at[i,"{} units".format(inst)] = 0
-
-            absolute_scores = np.abs([score for score in alpha_scores.values()])
-            forecast_chips = np.sum(absolute_scores)
-            nominal_tot = 0
-            for inst in eligibles:
-                forecast = alpha_scores[inst]
-                dollar_allocation = portfolio_df.at[i,"capital"] / forecast_chips if forecast_chips != 0 else 0  # always fully invested
-                position = forecast * dollar_allocation / self.dfs[inst].at[date,"close"]
-                portfolio_df.at[i, inst + " units"] = position 
-                nominal_tot += abs(position * self.dfs[inst].at[date,"close"])
-
-            for inst in eligibles:
-                units = portfolio_df.at[i, inst + " units"]
-                nominal_inst = units * self.dfs[inst].at[date,"close"]
-                inst_w = nominal_inst / nominal_tot
-                portfolio_df.at[i, inst + " w"] = inst_w
-            
-            portfolio_df.at[i, "nominal"] = nominal_tot
-            portfolio_df.at[i, "leverage"] = nominal_tot / portfolio_df.at[i, "capital"]
-            if i%100 == 0: print(portfolio_df.loc[i])
-        return portfolio_df
+'''
