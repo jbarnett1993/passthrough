@@ -1,3 +1,37 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Read the data from the Excel file
+df = pd.read_excel('your_file.xlsx')
+
+# Drop the SUM and Position columns as they are not needed for the plot and calculations
+df = df.drop(['SUM', 'Position'], axis=1)
+
+# Calculate the standard deviation for each player and add it as a new column
+df['Std Dev'] = df.iloc[:, 1:].std(axis=1)
+
+# Prepare data for plotting ranks over time
+ranking_df = df.set_index('Name').T.apply(lambda x: x.rank(ascending=False))
+
+# Plotting
+plt.figure(figsize=(10, 6))
+for player in ranking_df.columns:
+    plt.plot(ranking_df.index, ranking_df[player], label=player, marker='o')
+
+plt.title('Ranking Over Time')
+plt.xlabel('Week')
+plt.ylabel('Rank')
+plt.gca().invert_yaxis()  # Invert y-axis to show the best rank (1) at the top
+plt.xticks(rotation=45)
+plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.tight_layout()
+plt.show()
+
+# Display the data frame with the standard deviation column
+print(df)
+
+
 '''
 Position	Name	Week 1 	Week 2	Week3	Week4	SUM
 1	PETER WELSBY	222	171	207	118	718
