@@ -3,23 +3,26 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Read the data from the Excel file
-df = pd.read_excel('your_file.xlsx')
+df = pd.read_excel('2024_Quiz_League.xlsx')
 
 # Drop the Position column as it is not needed for the plot
-df = df.drop(['Position'], axis=1)
+df = df.drop(['Position',], axis=1)
 
 # Calculate the cumulative sum across the weeks for each player
-cumulative_scores = df.iloc[:, 2:].cumsum(axis=1)
+cumulative_scores = df.iloc[:, 1:-1].cumsum(axis=1)
 cumulative_scores['Name'] = df['Name']  # Add names back to the cumulative_scores DataFrame
 cumulative_scores = cumulative_scores.set_index('Name')
 
+ranks = cumulative_scores.rank(axis=0,ascending=False,method='min')
+# ranks['Name'] = df['Name']
+print(ranks)
 # Calculate the standard deviation for each player and add it as a new column to the original df
 df['Std Dev'] = df.iloc[:, 2:].std(axis=1)
-
+# print(ranks)
 # Plotting
 plt.figure(figsize=(10, 6))
-for player in cumulative_scores.index:
-    plt.plot(cumulative_scores.columns, cumulative_scores.loc[player], label=player, marker='o')
+for player in ranks.index:
+    plt.plot(ranks.columns, ranks.loc[player], label=player, marker='o')
 
 plt.title('Cumulative Scores Over Time')
 plt.xlabel('Week')
