@@ -57,4 +57,26 @@ start = pd.datetime.combine(dt, datetime.time(13, 30))
 end = pd.datetime.combine(dt, datetime.time(21, 30))
 f = LocalTerminal.get_intraday_bar(sid, event, start, end, interval=60).as_frame()
 f.head()
+
+
+import pandas as pd
+import datetime
+from pandas.tseries.offsets import BDay
+# Assuming LocalTerminal is part of Bloomberg API or a similar setup you have
+
+# Your DataFrame is assumed to be df
+
+for index, row in df.iterrows():
+    # Extract currency symbol and eco future release date
+    sid = row['currency']  # This assumes your currency column correctly maps to Bloomberg symbols
+    eco_future_release_date = pd.to_datetime(row['ECO_FUTURE_RELEASE_DATE'])
+    
+    # Set the start time to the release time and end time to one hour later
+    start = datetime.datetime.combine(eco_future_release_date.date(), eco_future_release_date.time())
+    end = start + datetime.timedelta(hours=1)
+    
+    # Query the Bloomberg API for intraday bars
+    f = LocalTerminal.get_intraday_bar(sid, "TRADE", start, end, interval=15).as_frame()
+    print(f.head())  # Or process the frame as needed
+
 '''
