@@ -9,8 +9,28 @@ events = ['JNCICLEI Index', 'SZUE Index', 'SZUEUEA Index', 'GRIPIMOM Index', 'GE
 
 df = pd.DataFrame()
 df.index = events
-
-for event in df.index:
-    df['country'] = mgr[event].COUNTRY
+upto = 20
+for event in df.index[:upto]:
+    df.at[event, 'country'] = mgr[event].COUNTRY
 
 print(df)
+
+
+'''
+def get_last_prices(tickers):
+    return mgr[tickers].PX_LAST
+
+# Retrieve the last prices for all tickers in batches
+n = len(spot_curves)
+batch_size = 100  # You can adjust the batch size as needed
+
+last_prices = []
+for i in range(0, n, batch_size):
+    tickers_batch = spot_curves.iloc[:, i:i+batch_size].stack().tolist()
+    prices = get_last_prices(tickers_batch)
+    prices = prices.reindex(tickers_batch)
+    last_prices.extend(prices.values.tolist())
+
+
+
+'''
