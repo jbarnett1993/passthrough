@@ -53,4 +53,11 @@ SPIOWSAY Index      SP                     Spain  Spain Industrial Production Wo
 SPIOWSAM Index      SP                     Spain  Spain Industrial Production Workday Sean. Adju...          0.00000     2024/03/07 08:00:00     2024-02-07                 0.080            2024-01-11
 
 
+
+currencies = {'Mexico':'USDMXN Curncy', 'United Kingdom': 'GBPUSD Curncy', 'Japan':'USDJPY Curncy', 'Australia':'AUDUSD Curncy', 'Switzerland':'USDCHF Curncy', 'Germany':'EURUSD Curncy',
+ 'Denmark':'USDDKK Curncy', 'Sweden':'USDSEK Curncy', 'Norway':'USDNOK Curncy', 'France':'EURUSD Curncy', 'Spain':'EURUSD Curncy', 'Canada':'USDCAD Curncy',
+ 'United States of America':'EURUSD Curncy', 'Brazil':'USDBRL Curncy', 'Italy':'EURUSD Curncy', 'China':'USDCNH Curncy'}
+
+
+
 '''
