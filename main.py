@@ -1,82 +1,232 @@
-'''
-               COUNTRY         REGION_OR_COUNTRY CRNCY                                     LONG_COMP_NAME  RELEVANCE_VALUE ECO_FUTURE_RELEASE_DATE ECO_RELEASE_DT  RT_BN_SURVEY_AVERAGE PREVIOUS_TRADING_DATE       currency
-UKRXPBAL Index      GB            United Kingdom   NaN  RICS England & Wales Housing Market Survey Pri...         60.46510     2024/02/08 00:01:00     2024-02-08               -21.900            2024-01-18  GBPUSD Curncy
-NOIPOYOY Index      NO                    Norway   NaN  Norway Industrial Production Overall YoY Worki...         53.33330     2024/03/07 07:00:00     2024-02-07                   NaN            2024-01-08  USDNOK Curncy
-NOIPISAM Index      NO                    Norway   NOK  Norway Industrial Production Manufacturing MoM...         63.33330     2024/03/07 07:00:00     2024-02-07                   NaN            2024-01-08  USDNOK Curncy
-NOIPIYOY Index      NO                    Norway   NOK  Norway Industrial Production Manufacturing YoY...         50.00000     2024/03/07 07:00:00     2024-02-07                   NaN            2024-01-08  USDNOK Curncy
-FRPRPRIQ Index      FR                    France   NaN  France Payroll Employment - Private Sector Tot...          5.88235     2024/02/29 06:30:00     2024-02-07                 0.000            2023-11-29  EURUSD Curncy
-FRTEBAL Index       FR                    France   EUR          France Trade Balance in Millions of euros         47.05880     2024/03/08 07:45:00     2024-02-07                   NaN            2024-01-09  EURUSD Curncy
-FFCAB12S Index      FR                    France   EUR                France Current Account Balance SWDA         11.76470     2024/03/08 07:45:00     2024-02-07                   NaN            2024-01-09  EURUSD Curncy
-SZRAFCRC Index      SZ               Switzerland   CHF        Switzerland Foreign Currency Reserves - CHF         93.10340     2024/03/07 08:00:00     2024-02-07                   NaN            2024-01-09  USDCHF Curncy
-SPIOYOY Index       SP                     Spain   EUR                    Spain Industrial Production YoY         42.85710     2024/03/07 08:00:00     2024-02-07                   NaN            2024-01-11  EURUSD Curncy
-SPIOWSAY Index      SP                     Spain   NaN  Spain Industrial Production Workday Sean. Adju...          7.14286     2024/03/07 08:00:00     2024-02-07                   NaN            2024-01-11  EURUSD Curncy
-SPIOWSAM Index      SP                     Spain   NaN  Spain Industrial Production Workday Sean. Adju...          0.00000     2024/03/07 08:00:00     2024-02-07                 0.080            2024-01-11  EURUSD Curncy
-ITNSSTN Index       IT                     Italy   EUR                          Italy Retail Sales MoM SA         71.42860     2024/03/15 10:00:00     2024-02-07                   NaN            2024-01-10  EURUSD Curncy
-ITNSTY Index        IT                     Italy   EUR                             Italy Retail Sales YoY         68.57140     2024/03/15 10:00:00     2024-02-07                   NaN            2024-01-10  EURUSD Curncy
-BZPBPRDM Index      BZ                    Brazil   BRL                Brazil Public Primary Budget Result         42.30770     2024/02/29 11:30:00     2024-02-07              -125.094            2024-01-05  USDBRL Curncy
-BZPBNODM Index      BZ                    Brazil   BRL                Brazil Public Nominal Budget Result         28.84620     2024/02/29 11:30:00     2024-02-07              -113.803            2024-01-05  USDBRL Curncy
-BZDPNDT% Index      BZ                    Brazil   NaN                    Brazil Public Net Debt % of GDP         69.23080     2024/02/29 11:30:00     2024-02-07                60.220            2024-01-05  USDBRL Curncy
-MBAVCHNG Index      US  United States of America   NaN  MBA US US Mortgage Market Index Weekly % Chang...         90.00000     2024/02/14 12:00:00     2024-02-07                   NaN            2024-01-31  EURUSD Curncy
-BZRTAMPM Index      BZ                    Brazil   NaN        Brazil Amplified Retail Sales Volume MoM SA          5.76923     2024/03/14 12:00:00     2024-02-07                 0.400            2024-01-17  USDBRL Curncy
-BZRTRYOY Index      BZ                    Brazil   NaN        Brazil Retail Sales Volume Monthly YoY Real         86.53850     2024/03/14 12:00:00     2024-02-07                 3.080            2024-01-17  USDBRL Curncy
-BZRTAMPY Index      BZ                    Brazil   NaN           Brazil Amplified Retail Sales Volume YoY         21.15380     2024/03/14 12:00:00     2024-02-07                 3.020            2024-01-17  USDBRL Curncy
-BZRTRETM Index      BZ                    Brazil   NaN          Brazil Retail Sales Volume MoM% Change SA         76.92310     2024/03/14 12:00:00     2024-02-07                -0.100            2024-01-17  USDBRL Curncy
-JSIHSTCK Index      JN                     Japan   JPY      Non-residents' net investment in Japan stocks         51.13640     2024/02/07 23:50:00     2024-02-07                   NaN            2024-02-01  USDJPY Curncy
-JSIABOND Index      JN                     Japan   JPY  Japan Weekly Securities Investment Abroad Medi...         56.81820     2024/02/07 23:50:00     2024-02-07                   NaN            2024-02-01  USDJPY Curncy
-JSIHBOND Index      JN                     Japan   JPY       Non-residents' net investment in Japan bonds         47.72730     2024/02/07 23:50:00     2024-02-07                   NaN            2024-02-01  USDJPY Curncy
-JSIASTCK Index      JN                     Japan   JPY  Japan Weekly Securities Investment Abroad Stoc...         43.18180     2024/02/07 23:50:00     2024-02-07                   NaN            2024-02-01  USDJPY Curncy
-JNBPAB Index        JN                     Japan   JPY  Japan Balance of Payments Current Account Bala...         93.18180     2024/02/07 23:50:00     2024-02-07              1249.000            2024-01-12  USDJPY Curncy
-JNBPABA Index       JN                     Japan   JPY  Japan Balance of Payments Current Account Bala...         39.77270     2024/02/07 23:50:00     2024-02-07              2109.800            2024-01-12  USDJPY Curncy
-JNBPTRD Index       JN                     Japan   JPY        Japan Balance of Payments Trade Balance NSA         65.22730     2024/02/07 23:50:00     2024-02-07               158.000            2024-01-12  USDJPY Curncy
-JNBLENDA Index      JN                     Japan   NaN  Japan Loans & Discounts Avg Amounts Outstandin...         36.36360     2024/02/07 23:50:00     2024-02-07                   NaN            2024-01-12  USDJPY Curncy
-JNBLBYOY Index      JN                     Japan   NaN  Japan Loans & Discounts Avg Amounts Outstandin...         35.22730     2024/02/07 23:50:00     2024-02-07                   NaN            2024-01-12  USDJPY Curncy
-SZUE Index          SZ               Switzerland   NaN                  Switzerland Unemployment Rate NSA         79.31030     2024/03/07 06:45:00     2024-02-07                 2.400            2024-01-09  USDCHF Curncy
-SZUEUEA Index       SZ               Switzerland   NaN                   Switzerland Unemployment Rate SA         68.96550     2024/03/07 06:45:00     2024-02-07                 2.200            2024-01-09  USDCHF Curncy
-GRIPIMOM Index      GE                   Germany   NaN  Germany Industrial Production Incl Constructio...         88.46150     2024/03/08 07:00:00     2024-02-07                -0.500            2024-01-09  EURUSD Curncy
-GEINYY Index        GE                   Germany   NaN          Germany Industrial Production YoY NSA WDA         59.61540     2024/03/08 07:00:00     2024-02-07                -2.900            2024-01-09  EURUSD Curncy
-DEMFIPSM Index      DE                   Denmark   DKK  Denmark Industrial Production Manufacturing SA...         30.00000     2024/03/07 07:00:00     2024-02-07                   NaN            2024-01-10  USDDKK Curncy
-SWBUL Index         SW                    Sweden   SEK                          Sweden Budget Balance SEK         51.16280     2024/03/07 07:00:00     2024-02-07                   NaN            2024-01-09  USDSEK Curncy
-NOIPSAMM Index      NO                    Norway   NOK  Norway Industrial Production Overall SA MoM 20...         83.33330     2024/03/07 07:00:00     2024-02-07                   NaN            2024-01-08  USDNOK Curncy
-MXCDCOSA Index      MX                    Mexico   NaN            Mexico Consumer Confidence Indicator SA         15.55560     2024/03/06 12:00:00     2024-02-07                46.650            2024-01-08  USDMXN Curncy
-MXVETOTL Index      MX                    Mexico   NaN                      Mexican Vehicle Exports Total         40.00000     2024/03/06 12:00:00     2024-02-07                   NaN            2024-01-09  USDMXN Curncy
-MXVPTOTL Index      MX                    Mexico   MXN         Mexico Vehicle Production Total Production         44.44440     2024/03/06 12:00:00     2024-02-07                   NaN            2024-01-09  USDMXN Curncy
-CATBTOTB Index      CA                    Canada   CAD  STCA Canada Merchandise Trade Total Balance SA...         57.89470     2024/03/07 13:30:00     2024-02-07                 0.965            2024-01-09  USDCAD Curncy
-USTBTOT Index       US  United States of America   USD          US Trade Balance of Goods and Services SA         83.07690     2024/03/07 13:30:00     2024-02-07               -62.028            2024-01-09  EURUSD Curncy
-MXIRINUS Index      MX                    Mexico   USD               Mexico International Reserves in USD         71.11110     2024/02/13 15:00:00     2024-02-07                   NaN            2024-01-30  USDMXN Curncy
-BZTBIMPM Index      BZ                    Brazil   USD               Brazil Trade Balance FOB Imports NSA         23.07690     2024/02/07 18:00:00     2024-02-07             20344.330            2024-01-05  USDBRL Curncy
-BZTBEXPM Index      BZ                    Brazil   USD                   Brazil Trade Balance FOB Exports         32.69230     2024/02/07 18:00:00     2024-02-07             27671.170            2024-01-05  USDBRL Curncy
-BZTBBALM Index      BZ                    Brazil   USD               Brazil Trade Balance FOB Balance NSA         61.53850     2024/02/07 18:00:00     2024-02-07              7386.860            2024-01-05  USDBRL Curncy
-CICRTOT Index       US  United States of America   USD  Federal Reserve Consumer Credit Total Net Chan...         41.53850     2024/02/07 20:00:00     2024-02-07                12.881            2024-01-08  EURUSD Curncy
+# IntradayBarExample.py
+from __future__ import print_function
+from __future__ import absolute_import
 
-
+import blpapi
+import copy
 import datetime
-sid = 'IBM US EQUITY'
-event = 'TRADE'
-dt = pd.datetools.BDay(-1).apply(pd.datetime.now())
-start = pd.datetime.combine(dt, datetime.time(13, 30))
-end = pd.datetime.combine(dt, datetime.time(21, 30))
-f = LocalTerminal.get_intraday_bar(sid, event, start, end, interval=60).as_frame()
-f.head()
+from optparse import OptionParser, Option, OptionValueError
 
 
-import pandas as pd
-import datetime
-from pandas.tseries.offsets import BDay
-# Assuming LocalTerminal is part of Bloomberg API or a similar setup you have
+BAR_DATA = blpapi.Name("barData")
+BAR_TICK_DATA = blpapi.Name("barTickData")
+OPEN = blpapi.Name("open")
+HIGH = blpapi.Name("high")
+LOW = blpapi.Name("low")
+CLOSE = blpapi.Name("close")
+VOLUME = blpapi.Name("volume")
+NUM_EVENTS = blpapi.Name("numEvents")
+TIME = blpapi.Name("time")
+RESPONSE_ERROR = blpapi.Name("responseError")
+SESSION_TERMINATED = blpapi.Name("SessionTerminated")
+CATEGORY = blpapi.Name("category")
+MESSAGE = blpapi.Name("message")
 
-# Your DataFrame is assumed to be df
 
-for index, row in df.iterrows():
-    # Extract currency symbol and eco future release date
-    sid = row['currency']  # This assumes your currency column correctly maps to Bloomberg symbols
-    eco_future_release_date = pd.to_datetime(row['ECO_FUTURE_RELEASE_DATE'])
-    
-    # Set the start time to the release time and end time to one hour later
-    start = datetime.datetime.combine(eco_future_release_date.date(), eco_future_release_date.time())
-    end = start + datetime.timedelta(hours=1)
-    
-    # Query the Bloomberg API for intraday bars
-    f = LocalTerminal.get_intraday_bar(sid, "TRADE", start, end, interval=15).as_frame()
-    print(f.head())  # Or process the frame as needed
+def checkDateTime(option, opt, value):
+    try:
+        return datetime.datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
+    except ValueError as ex:
+        raise OptionValueError(
+            "option {0}: invalid datetime value: {1} ({2})".format(
+                opt, value, ex))
 
-'''
+
+class ExampleOption(Option):
+    TYPES = Option.TYPES + ("datetime",)
+    TYPE_CHECKER = copy.copy(Option.TYPE_CHECKER)
+    TYPE_CHECKER["datetime"] = checkDateTime
+
+
+def parseCmdLine():
+    parser = OptionParser(description="Retrieve intraday bars.",
+                          epilog="Notes: " +
+                          "1) All times are in GMT. " +
+                          "2) Only one security can be specified. " +
+                          "3) Only one event can be specified.",
+                          option_class=ExampleOption)
+    parser.add_option("-a",
+                      "--ip",
+                      dest="host",
+                      help="server name or IP (default: %default)",
+                      metavar="ipAddress",
+                      default="localhost")
+    parser.add_option("-p",
+                      dest="port",
+                      type="int",
+                      help="server port (default: %default)",
+                      metavar="tcpPort",
+                      default=8194)
+    parser.add_option("-s",
+                      dest="security",
+                      help="security (default: %default)",
+                      metavar="security",
+                      default="IBM US Equity")
+    parser.add_option("-e",
+                      dest="event",
+                      help="event (default: %default)",
+                      metavar="event",
+                      default="TRADE")
+    parser.add_option("-b",
+                      dest="barInterval",
+                      type="int",
+                      help="bar interval (default: %default)",
+                      metavar="barInterval",
+                      default=60)
+    parser.add_option("--sd",
+                      dest="startDateTime",
+                      type="datetime",
+                      help="start date/time (default: %default)",
+                      metavar="startDateTime",
+                      default=datetime.datetime(2008, 8, 11, 15, 30, 0))
+    parser.add_option("--ed",
+                      dest="endDateTime",
+                      type="datetime",
+                      help="end date/time (default: %default)",
+                      metavar="endDateTime",
+                      default=datetime.datetime(2008, 8, 11, 15, 35, 0))
+    parser.add_option("-g",
+                      dest="gapFillInitialBar",
+                      help="gapFillInitialBar",
+                      action="store_true",
+                      default=False)
+
+    (options, args) = parser.parse_args()
+
+    return options
+
+
+def printErrorInfo(leadingStr, errorInfo):
+    print("%s%s (%s)" % (leadingStr, errorInfo.getElementAsString(CATEGORY),
+                         errorInfo.getElementAsString(MESSAGE)))
+
+
+def processMessage(msg):
+    data = msg.getElement(BAR_DATA).getElement(BAR_TICK_DATA)
+    print("Datetime\t\tOpen\t\tHigh\t\tLow\t\tClose\t\tNumEvents\tVolume")
+
+    for bar in data.values():
+        time = bar.getElementAsDatetime(TIME)
+        open = bar.getElementAsFloat(OPEN)
+        high = bar.getElementAsFloat(HIGH)
+        low = bar.getElementAsFloat(LOW)
+        close = bar.getElementAsFloat(CLOSE)
+        numEvents = bar.getElementAsInteger(NUM_EVENTS)
+        volume = bar.getElementAsInteger(VOLUME)
+
+        print("%s\t\t%.3f\t\t%.3f\t\t%.3f\t\t%.3f\t\t%d\t\t%d" % \
+            (time.strftime("%m/%d/%y %H:%M"), open, high, low, close,
+             numEvents, volume))
+
+
+def processResponseEvent(event):
+    for msg in event:
+        print(msg)
+        if msg.hasElement(RESPONSE_ERROR):
+            printErrorInfo("REQUEST FAILED: ", msg.getElement(RESPONSE_ERROR))
+            continue
+        processMessage(msg)
+
+
+def sendIntradayBarRequest(session, options):
+    refDataService = session.getService("//blp/refdata")
+    request = refDataService.createRequest("IntradayBarRequest")
+
+    # only one security/eventType per request
+    request.set("security", options.security)
+    request.set("eventType", options.event)
+    request.set("interval", options.barInterval)
+
+    # All times are in GMT
+    if not options.startDateTime or not options.endDateTime:
+        tradedOn = getPreviousTradingDate()
+        if tradedOn:
+            startTime = datetime.datetime.combine(tradedOn,
+                                                  datetime.time(15, 30))
+            request.set("startDateTime", startTime)
+            endTime = datetime.datetime.combine(tradedOn,
+                                                datetime.time(15, 35))
+            request.set("endDateTime", endTime)
+    else:
+        if options.startDateTime and options.endDateTime:
+            request.set("startDateTime", options.startDateTime)
+            request.set("endDateTime", options.endDateTime)
+
+    if options.gapFillInitialBar:
+        request.set("gapFillInitialBar", True)
+
+    print("Sending Request:", request)
+    session.sendRequest(request)
+
+
+def eventLoop(session):
+    done = False
+    while not done:
+        # nextEvent() method below is called with a timeout to let
+        # the program catch Ctrl-C between arrivals of new events
+        event = session.nextEvent(500)
+        if event.eventType() == blpapi.Event.PARTIAL_RESPONSE:
+            print("Processing Partial Response")
+            processResponseEvent(event)
+        elif event.eventType() == blpapi.Event.RESPONSE:
+            print("Processing Response")
+            processResponseEvent(event)
+            done = True
+        else:
+            for msg in event:
+                if event.eventType() == blpapi.Event.SESSION_STATUS:
+                    if msg.messageType() == SESSION_TERMINATED:
+                        done = True
+
+
+def getPreviousTradingDate():
+    tradedOn = datetime.date.today()
+
+    while True:
+        try:
+            tradedOn -= datetime.timedelta(days=1)
+        except OverflowError:
+            return None
+
+        if tradedOn.weekday() not in [5, 6]:
+            return tradedOn
+
+
+def main():
+    options = parseCmdLine()
+
+    # Fill SessionOptions
+    sessionOptions = blpapi.SessionOptions()
+    sessionOptions.setServerHost(options.host)
+    sessionOptions.setServerPort(options.port)
+
+    print("Connecting to %s:%s" % (options.host, options.port))
+    # Create a Session
+    session = blpapi.Session(sessionOptions)
+
+    # Start a Session
+    if not session.start():
+        print("Failed to start session.")
+        return
+
+    try:
+        # Open service to get historical data from
+        if not session.openService("//blp/refdata"):
+            print("Failed to open //blp/refdata")
+            return
+
+        sendIntradayBarRequest(session, options)
+
+        # wait for events from session.
+        eventLoop(session)
+
+    finally:
+        # Stop the session
+        session.stop()
+
+if __name__ == "__main__":
+    print("IntradayBarExample")
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("Ctrl+C pressed. Stopping...")
