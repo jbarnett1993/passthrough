@@ -44,8 +44,12 @@ df = df[~(df['REGION_OR_COUNTRY']=="BRITAIN")]
 
 df['currency'] = df['REGION_OR_COUNTRY'].map(currencies)
 df = df.sort_values(by='ECO_FUTURE_RELEASE_DATE')
-df.to_csv('working_dataframe.csv')
+# df.to_csv('working_dataframe.csv')
 
+cum_5m = []
+cum_10m = []
+cum_15m = []
+cum_20m = []
 
 for index, row in df.iterrows():
     # Extract currency symbol and eco future release date
@@ -54,19 +58,36 @@ for index, row in df.iterrows():
     prior_release = row['PREVIOUS_TRADING_DATE']
     # Set the start time to the release time and end time to one hour later
     start = datetime.combine(prior_release.date(), next_release.time())
-    end = start + relativedelta(hours=1)
-    # 
-    # Query the Bloomberg API for intraday bars
-    f = LocalTerminal.get_intraday_bar(sid, "TRADE", start, end, interval=15).as_frame()
-    print(f.head())  
-'''
-2024-02-09 13:30:00
+    end = start + relativedelta(minutes=20)
+    f = LocalTerminal.get_intraday_bar(sid, "TRADE", start, end, interval=5).as_frame()
+    if not f.empty:
+        initial_open_price = f.iloc[0]['open']
+        for i in range(len(f)):
+            if i < len(f):
+                close_price = f.iloc[i]['close']
+                percent_move = ((close_price - initial_open_price)/initial_open_price) * 100
+            else:
+                percent_move = np.nan
+            if i == 0:
+                cum_5m.append(percent_move)
+            elif i == 1:
+                cum_10m.append(percent_move)
+            elif i == 2:
+                cum_15m.append(percent_move)
+            elif i == 3:
+                cum_20m.append(percent_move)
+    else:
+        cum_5m.append('Mkt Closed')
+        cum_10m.append('Mkt Closed')
+        cum_15m.append('Mkt Closed')
+        cum_20m.append('Mkt Closed')
 
-2024-02-12 16:00:00
+df['5m move'] = cum_5m
+df['10m move'] = cum_10m
+df['15m move'] = cum_15m
+df['20m move'] = cum_20m
 
-                 time    open    high     low   close  volume  numEvents  value
-0 2024-01-30 10:00:00  1.0827  1.0828  1.0823  1.0827       0      12007    0.0
-1 2024-01-30 10:15:00  1.0827  1.0831  1.0826  1.0829       0      11887    0.0
-2 2024-01-30 10:30:00  1.0829  1.0837  1.0828  1.0835       0      11775    0.0
-3 2024-01-30 10:45:00  1.0835  1.0841  1.0835  1.0838       0      12392    0.0
-'''
+print(df)
+
+df.to_csv('final.csv')
+
