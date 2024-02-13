@@ -57,3 +57,12 @@ class TickDataProcessor:
                 pct_change_bps = np.nan
             tick_data.append(pct_change_bps)
         return tick_data
+        
+        
+# Instantiate the DataManager with events and currencies
+data_manager = DataManager(events, currencies)
+df = data_manager.get_data()
+
+# Process tick data
+tick_processor = TickDataProcessor(df)
+tick_data = tick_processor.get_tick_data()
