@@ -66,3 +66,14 @@ df = data_manager.get_data()
 # Process tick data
 tick_processor = TickDataProcessor(df)
 tick_data = tick_processor.get_tick_data()
+
+
+'''
+                 time   type  value  size
+0 2024-02-07 12:00:01  TRADE  89.67     0
+1 2024-02-07 12:00:03  TRADE  89.66     0
+2 2024-02-07 12:00:09  TRADE  89.67     0
+3 2024-02-07 12:00:45  TRADE  89.67     0
+4 2024-02-07 12:00:59  TRADE  89.68     0
+
+'''
