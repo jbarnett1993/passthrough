@@ -5,7 +5,6 @@ import tia.analysis.model as model
 import pandas as pd
 import numpy as np
 from tia.bbg import LocalTerminal
-from datetime import datetime, date
 
 
 
@@ -17,7 +16,6 @@ curve_ids = []
 
 class SpotCurve():
     pass
-test = dt(2024,3,6)+2
 
 for ccy, curve in curves.items():
     curve_id = 'YCSW' + curve.zfill(4) + ' Index'
@@ -31,7 +29,7 @@ data = pd.DataFrame({"Term": tenors,
                      "Rate":rates})
 
 
-data["Termination"] = [add_tenor(date.today(), _, "F", "nyc") for _ in data["Term"]]
+data["Termination"] = [add_tenor(dt(2024,3,6), _, "F", "nyc") for _ in data["Term"]]
 print(data)
 # exit()
 sofr = Curve(
